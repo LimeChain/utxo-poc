@@ -89,6 +89,31 @@ impl Output {
         
         res
     }
+
+    fn to_bytes_32(self: Self) -> [u8; 32] {
+        let mut arr =  [0 as u8; OUTPUT_SIZE];
+        let mut index = 0;
+
+        for j in 0..20 {
+            arr[index] = self.erc20_address[j];
+            index += 1;
+        }
+        for j in 0..32 {
+            arr[index] = self.value[j];
+            index += 1;
+        }
+        for j in 0..32 {
+            arr[index] = self.spender_pub_key_x[j];
+            index += 1;
+        }
+        for j in 0..32 {
+            arr[index] = self.spender_pub_key_y[j];
+            index += 1;
+        }
+        
+        let res = std::hash::keccak256(arr, OUTPUT_SIZE);
+        res
+    }
 }
 
 struct SignedTransaction {
@@ -109,20 +134,37 @@ impl SignedTransaction {
     }
 }
 
-//based on https://github.com/tomoima525/noir-merkle-root/blob/main/src/lib.nr
-fn compute_merkle_root(leaf: [Field; OUTPUT_SIZE], path_indices: [Field; 32], siblings: [[Field; OUTPUT_SIZE]; 32]) -> Field {
+// NOTE: we need to initially compress the Output leaf to 32 bytes before passing it to the function
+fn compute_merkle_root(leaf: [u8; 32], path_indices: [Field; 32], siblings: [[u8; 32]; 32]) -> [u8; 32] {
     let mut current = leaf;
-    for i in 0..32 {
+    for i in 0..32 { //depth 32
         let is_right = (path_indices[i] == 1) as bool;
-        let (hash_left, hash_right) = if is_right {
-            (siblings[i], current)
-         } else {
-            (current, siblings[i])
-         };
-        // poseidon currently doesn't have poseidon hash function for 200 byte elements. We can ask Aztec team to extend the hash function for N bytes
-        // current = std::hash::poseidon::bn254::hash_1([hash_left, hash_right]);
-        current = std::hash::mimc::mimc_bn254<UTXO_SIZE>([hash_left, hash_right]);
-    };
+        let mut arr: [u8; 64] = [0; 64];
+        let mut index = 0;
+        for j in 0..32 { // each one of 32 bytes
+            if(is_right) {
+                arr[index] = siblings[i][j];
+                index += 1;
+            } else {
+                arr[index] = current[j];
+                index += 1;
+            }
+        }
+        
+        for j in 0..32 { // each one of 32 bytes
+            if(is_right) {
+                arr[index] = current[j];
+                index += 1;
+            } else {
+                arr[index] = siblings[i][j];
+                index += 1;
+            }
+        }
+        
+        current = std::hash::keccak256(arr, UTXO_SIZE);
+
+    }
+
     current
 }
 
@@ -131,7 +173,7 @@ fn compute_merkle_root(leaf: [Field; OUTPUT_SIZE], path_indices: [Field; 32], si
 // The nullifier tree will be append-only and should be used to proove UTXO has not been spent using merkle non-inclusion proof.
 // nullifier
 // Merkle tree of depth 32 should be enough to represent 4 billion UTXOs, enough to cover the next 27 years at 5 TPS at full usage.
-fn main(utxo_before_root: Field, utxo_before_path_indices: [Field; 32], utxo_before_siblings: [[Field; OUTPUT_SIZE]; 32], utxo_after_root: Field, utxo_after_path_indices: [Field; 32], utxo_after_siblings: [[Field; OUTPUT_SIZE]; 32], signed_transaction: SignedTransaction) {
+fn main(utxo_before_root: [u8; 32], utxo_before_path_indices: [Field; 32], utxo_before_siblings: [[u8; 32]; 32], utxo_after_root: [u8; 32], utxo_after_path_indices: [Field; 32], utxo_after_siblings: [[u8; 32]; 32], signed_transaction: SignedTransaction) {
 
         //ENSURE that the signature is signed by the same owner that claims to have access to UTXO before
         assert(signed_transaction.verify());
@@ -148,8 +190,7 @@ fn main(utxo_before_root: Field, utxo_before_path_indices: [Field; 32], utxo_bef
         assert(!total_value_inputs.is_zero());
         
         //assert utxo input index exists in utxo set before (use it as leaf index)
-        let input: [Field; OUTPUT_SIZE] = utxo.input.to_field_array();
-        let computed_root = compute_merkle_root(input, utxo_before_path_indices, utxo_before_siblings);
+        let computed_root = compute_merkle_root(utxo.input.to_bytes_32(), utxo_before_path_indices, utxo_before_siblings);
         assert(utxo_before_root == computed_root);
 
         //ownership check
@@ -161,8 +202,7 @@ fn main(utxo_before_root: Field, utxo_before_path_indices: [Field; 32], utxo_bef
         //can be achieved with indexed merkle tree non-inclusion proof
 
         //assert the new utxo output has been added to the utxo tree after the transaction
-        let output: [Field; OUTPUT_SIZE] = utxo.output.to_field_array();
-        let computed_root = compute_merkle_root(output, utxo_after_path_indices, utxo_after_siblings);
+        let computed_root = compute_merkle_root(utxo.output.to_bytes_32(), utxo_after_path_indices, utxo_after_siblings);
         assert(utxo_after_root == computed_root);
 
 }
