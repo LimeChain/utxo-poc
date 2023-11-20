@@ -1,0 +1,9 @@
+[package]
+name = "utxo_poc"
+type = "bin"
+authors = [""]
+compiler_version = ">=0.18"
+
+[dependencies]
+noir_biguint = {path = "lib/biguint/" }
+ecrecover = { path = "lib/ecrecover/" }
