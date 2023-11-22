@@ -1,7 +1,5 @@
 use dep::std;
 
-use dep::array_helpers;
-
 struct PubKey {
     pub_x: [u8; 32],
     pub_y: [u8; 32],
