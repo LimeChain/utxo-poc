@@ -1,0 +1,14 @@
+{
+    "name": "devcontainer-plasmapoc-workspace",
+    "service": "devcontainer-plasmapoc-workspace",
+    "shutdownAction": "stopCompose",
+    "workspaceFolder": "${localWorkspaceFolder}",
+    "dockerComposeFile": "docker-compose.yml",
+    "postCreateCommand": "",
+    "postStartCommand": "",
+    "extensions": [
+        "hookyqr.beautify",
+        "dbaeumer.vscode-eslint",
+        "albymor.increment-selection",
+    ],
+}

@@ -1,0 +1,20 @@
+{
+  "name": "utxopoc",
+  "version": "0.0.1",
+  "description": "UtxoPoc",
+  "scripts": {
+    "start-dev-watch": "(trap 'kill 0' SIGINT; npx tsc --watch & npx nodemon)"
+  },
+  "devDependencies": {
+    "@tsconfig/node21": "^21.0.0",
+    "@types/restify": "^8.5.11",
+    "typescript": "^5.3.2",
+    "nodemon": "^3.0.1"
+
+  },
+  "dependencies": {
+    "restify": "^11.1.0",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.8.1"
+  }
+}

@@ -1,0 +1,10 @@
+{
+    "extends": "@tsconfig/node21/tsconfig.json",
+    "include": ["src/**/*"],
+    "exclude": ["node_modules"],
+    "compilerOptions": {
+        "lib": ["dom", "es2023"],
+        "allowJs": true,
+        "outDir": "build"
+    },
+}

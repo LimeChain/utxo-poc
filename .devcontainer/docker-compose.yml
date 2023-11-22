@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  devcontainer-plasmapoc-workspace:
+    image: devcontainer-plasmapoc-workspace
+    container_name: devcontainer-plasmapoc-workspace
+    build:
+      dockerfile: ./services/workspace/workspace.dockerfile
+      context: ./
+      args:
+        MNT_PATH: "$MNT_PATH"
+        PASS: "$PASS"
+        USER_ID: "$USER_ID"
+        USER_NAME: "$USER_NAME"
+        GROUP_ID: "$GROUP_ID"
+        GROUP_NAME: "$GROUP_NAME"
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - "../:$MNT_PATH"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "128m"
+        max-file: "1"
