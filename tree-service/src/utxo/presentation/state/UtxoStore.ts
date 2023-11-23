@@ -1,11 +1,18 @@
-import { UtxoGraph } from '../../entities/UtxoGraph';
+import ParsedEvent from '../../../eth-observer/entities/ParsedEvent';
+import UtxoGraph from '../../entities/UtxoGraph';
 
 export default class UtxoStore {
 
-    utsxoGraph: UtxoGraph = new UtxoGraph();
+    utxoGraph: UtxoGraph = new UtxoGraph();
 
-    async update() {
+    async update(parsedEvents: ParsedEvent[]) {
+        parsedEvents.forEach((parsedEvent) => {
+            this.utxoGraph.processParsedEvent(parsedEvent);
+            console.log('rootHash', this.utxoGraph.merkleTree.get(BigInt(1)));
+        });
 
+        console.log(this.utxoGraph);
+        this.utxoGraph.printAccountBalances();
     }
 
 }

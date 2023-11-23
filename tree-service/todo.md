@@ -1,6 +1,3 @@
-Hardcode example contract events
-UtxoGraph entities
-Hardcode example UtxoGraph
 NullifierTree entities
 Hardcode example NullifierTree
 Connect rest api with UtxoGraph and NullifierTree

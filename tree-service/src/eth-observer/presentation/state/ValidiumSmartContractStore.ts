@@ -1,3 +1,4 @@
+import ParsedEvent from '../../entities/ParsedEvent';
 import { ValidiumSmartContractUseCases } from '../../use-cases/ValidiumSmartContractUseCases';
 import EthObserverStore from './EthObserverStore';
 
@@ -15,10 +16,12 @@ export class ValidiumSmartContractStore {
         this.lastCheckedEthBlockNumber = parseInt(process.env.ETH_BLOCK_START ?? "0");
     }
 
-    async fetchEvents(): Promise<void> {
+    async fetchEvents(): Promise<ParsedEvent[]> {
         const ethBlockHeight = await this.ethObserverStore.fetchBlockNumber();
-        this.validiumSmartContractUseCases.fetchEvents(this.lastCheckedEthBlockNumber + 1, ethBlockHeight);
+        const parseEvents = await this.validiumSmartContractUseCases.fetchEvents(this.lastCheckedEthBlockNumber + 1, ethBlockHeight);
         this.lastCheckedEthBlockNumber = ethBlockHeight;
+
+        return parseEvents;
     }
 
 }
