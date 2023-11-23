@@ -1,0 +1,8 @@
+[package]
+name = "low_nullifier"
+type = "bin"
+authors = [""]
+compiler_version = ">=0.18"
+
+[dependencies]
+util = { path = "../../lib/util/" }

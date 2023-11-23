@@ -1,0 +1,5 @@
+[package]
+authors = ["mikirov"]
+compiler_version = ">=0.18"
+name = "util"
+type = "lib"

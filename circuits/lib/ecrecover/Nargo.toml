@@ -1,6 +1,0 @@
-[package]
-authors = ["@colinnielsen"]
-compiler_version = ">=0.18"
-name = "ecrecover"
-notes = "AMDG"
-type = "lib"
