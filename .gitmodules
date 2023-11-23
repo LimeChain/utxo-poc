@@ -1,0 +1,3 @@
+[submodule "utxo-poc/lib/forge-std"]
+	path = utxo-poc/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
