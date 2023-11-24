@@ -1,23 +1,24 @@
-import createKeccakHash from 'keccak';
+import HashUtils from '../../core/utilities/HashUtils';
+import MerkleTreeNode from '../../merkle-tree/entities/MerkleTreeNode';
 
-export class UtxoNode {
+export default class UtxoNode extends MerkleTreeNode {
 
-    hash: string = '';
     value: bigint = 0n;
     pubKey: string = '';
     spent: boolean = false;
 
-    static newUnspentUtxoNode(): UtxoNode {
+    static newUnspentUtxoNode(pubKey: string, value: bigint): UtxoNode {
         const utxoNode = new UtxoNode();
+        utxoNode.pubKey = pubKey;
+        utxoNode.value = value;
         utxoNode.spent = false;
-        return utxoNode;
-    }
 
-    invalidateHash(): void {
-        const json = JSON.stringify(this, (key, value) => {
+        const json = JSON.stringify(utxoNode, (key, value) => {
             return typeof (value) === 'bigint' ? value.toString() : value;
         });
-        this.hash = createKeccakHash('keccak256').update(json).digest('hex');
+        utxoNode.hash = HashUtils.createHash(json);
+
+        return utxoNode;
     }
 
     isSpent(): boolean {
@@ -26,6 +27,10 @@ export class UtxoNode {
 
     spend(): void {
         this.spent = true;
+    }
+
+    getHash(): string {
+        return this.hash;
     }
 
 }

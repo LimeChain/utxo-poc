@@ -1,27 +1,25 @@
-import createKeccakHash from 'keccak';
 import ParsedEvent from '../../eth-observer/entities/ParsedEvent';
-import { UtxoNode } from './UtxoNode';
-
-const MERKLE_ROOT_INDEX = 1n;
-const MERKLE_DEPTH = 32n;
+import MerkleTree from '../../merkle-tree/entities/MerkleTree';
+import UtxoNode from './UtxoNode';
 
 export default class UtxoGraph {
 
-    merkleTree: Map<bigint, string> = new Map();
-    utxoLeaves: UtxoNode[] = [];
+    merkleTree: MerkleTree<UtxoNode> = new MerkleTree();
 
     wallets: Map<string, Set<string>> = new Map();
 
     graph: Map<string, UtxoNode> = new Map();
 
-    processParsedEvent(parsedEvent: ParsedEvent) {
+    processParsedEvent(parsedEvent: ParsedEvent): UtxoNode[] | null {
+        const spendUtxoNodes: UtxoNode[] = [];
+
         let totalUnspentValue = 0n;
         if (parsedEvent.isTransfer() === true || parsedEvent.isWithdraw() === true) {
             // get all unspent nodes' hashes
             const utxoNodeHashes = this.wallets.get(parsedEvent.privKey);
             if (utxoNodeHashes === undefined) {
                 console.log('Error: Insufficient funds');
-                return;
+                return null;
             }
 
             // get all unspent nodes
@@ -62,11 +60,12 @@ export default class UtxoGraph {
 
             if (lastIncludedIndex === -1) {
                 console.log('Error: Insufficient funds');
-                return;
+                return null;
             }
 
             // spend nodes
             for (let i = 0; i <= lastIncludedIndex; ++i) {
+                spendUtxoNodes.push(unspentNodes[i]);
                 this.burnUtxoNode(unspentNodes[i]);
             }
         }
@@ -83,19 +82,16 @@ export default class UtxoGraph {
                 this.mintUtxoNode(parsedEvent.privKey, change);
             }
         }
+
+        return spendUtxoNodes;
     }
 
     mintUtxoNode(pubKey: string, value: bigint) {
-        const utxoNode = UtxoNode.newUnspentUtxoNode();
+        const utxoNode = UtxoNode.newUnspentUtxoNode(pubKey, value);
 
-        utxoNode.pubKey = pubKey;
-        utxoNode.value = value;
-        utxoNode.invalidateHash();
-
-        this.utxoLeaves.push(utxoNode);
         this.addToWallet(pubKey, utxoNode);
         this.graph.set(utxoNode.hash, utxoNode);
-        this.updateMerkleTree(this.utxoLeaves.length - 1);
+        this.merkleTree.appendLeaf(utxoNode);
     }
 
     burnUtxoNode(utxoNode: UtxoNode): void {
@@ -120,32 +116,6 @@ export default class UtxoGraph {
         }
 
         set.delete(utxoNode.hash);
-    }
-
-    updateMerkleTree(leafIndex: number) {
-        const nodeHash = this.utxoLeaves[leafIndex].hash;
-        const merkleLeafIndex = (MERKLE_ROOT_INDEX << MERKLE_DEPTH) + BigInt(leafIndex);
-
-        this.merkleTree.set(merkleLeafIndex, nodeHash);
-
-        let currentMerkleLeafIndex = merkleLeafIndex;
-        for (; ;) {
-            const parentMerkleLeafIndex = currentMerkleLeafIndex >> 1n;
-            if (parentMerkleLeafIndex === 0n) {
-                break;
-            }
-
-            const merkleLeftLeafIndex = parentMerkleLeafIndex << 1n;
-            const merkleRightLeafIndex = merkleLeftLeafIndex + 1n;
-
-            const leftNodeHash = this.merkleTree.get(merkleLeftLeafIndex) ?? '';
-            const rightNodeHash = this.merkleTree.get(merkleRightLeafIndex) ?? '';
-            const parentNodeHashContent = leftNodeHash + rightNodeHash;
-            const parentNodeHash = createKeccakHash('keccak256').update(parentNodeHashContent).digest('hex');
-            this.merkleTree.set(parentMerkleLeafIndex, parentNodeHash);
-
-            currentMerkleLeafIndex = parentMerkleLeafIndex;
-        }
     }
 
     printAccountBalances() {

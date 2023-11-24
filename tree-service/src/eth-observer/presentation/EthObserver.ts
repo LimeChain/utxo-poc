@@ -22,8 +22,8 @@ export default class EthObserver {
 
     run = async () => {
         const parsedEvents = await this.validiumSmartContractStore.fetchEvents();
-        this.utxoStore.update(parsedEvents);
-        this.nullifierStore.update();
+        const spendUtxoNodesPerEvent = await this.utxoStore.update(parsedEvents);
+        this.nullifierStore.update(parsedEvents, spendUtxoNodesPerEvent);
     }
 
 }
