@@ -8,7 +8,7 @@ import {Script, console} from "forge-std/Script.sol";
 contract Deploy is Script {
     L1Exiter wrapper;
     UltraVerifier verifier;
-    uint challengePeriod = 24 * 60 * 60; // 1 day in seconds
+    uint256 challengePeriod = 24 * 60 * 60; // 1 day in seconds
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
