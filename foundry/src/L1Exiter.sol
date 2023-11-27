@@ -79,7 +79,7 @@ contract L1Exiter is Ownable, ReentrancyGuard {
         require(balance.amount > 0, "exit not initiated or already completed");
 
         if (balance.token == address(0)) {
-            (bool success,) = payable(msg.sender).call{value: balance.amount}();
+            (bool success,) = payable(msg.sender).call{value: balance.amount}("");
             require(success);
         } else {
             IERC20(balance.token).safeTransfer(msg.sender, balance.amount);
@@ -162,7 +162,7 @@ contract L1Exiter is Ownable, ReentrancyGuard {
         }
 
         if (_utxo.token == address(0)) {
-            (bool success,) = payable(msg.sender).call{value: balance.amount}();
+            (bool success,) = payable(msg.sender).call{value: _utxo.value}("");
             require(success);
         } else {
             IERC20(_utxo.token).safeTransfer(msg.sender, _utxo.value);
