@@ -2,13 +2,12 @@
 pragma solidity ^0.8.13;
 
 import {IVerifier} from "./interfaces/IVerifier.sol";
-import {IBlockhashOracle} from "./interfaces/IBlockhashOracle.sol";
 
 import "openzeppelin/access/Ownable.sol";
-import "openzeppelin/utils/cryptography/ECDSA.sol";
-import "openzeppelin/utils/cryptography/MerkleProof.sol";
 import "openzeppelin/token/ERC20/IERC20.sol";
+import "openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import "openzeppelin/utils/ReentrancyGuard.sol";
+import "openzeppelin/utils/cryptography/MerkleProof.sol";
 
 struct UTXO {
     uint256 value;
@@ -19,14 +18,13 @@ struct UTXO {
 
 contract L1Exiter is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    using ECDSA for bytes32;
     using MerkleProof for bytes32[];
 
     IVerifier public verifier;
-    IBlockhashOracle public blockhashOracle;
     uint256 public challengePeriod;
 
     bytes32 public nullifierRoot;
+    bytes32 public utxoRoot;
 
     struct Balance {
         uint256 amount;
@@ -37,35 +35,35 @@ contract L1Exiter is Ownable, ReentrancyGuard {
     // message hash to user address to (ammount, challengePeriodEnd)
     mapping(bytes32 => mapping(address => Balance)) public exits;
 
-    event ExitInitiated(bytes32 indexed messageHash);
+    event ExitInitiated(address spender, bytes32 indexed messageHash);
 
-    constructor (address _verifier, address _blockhashOracle, _challengePeriod) {
+    constructor (address _verifier, uint256 _challengePeriod) Ownable(msg.sender) {
         require(_verifier != address(0)); 
-        require(_blockhashOracle != address(0));
         verifier = IVerifier(verifier);
-        blockhashOracle = IBlockhashOracle(blockhashOracle);
         challengePeriod = _challengePeriod;
     
     }
 
     //NOTE: we optimistically trust that the account-based model state roots are correct.
     //submits proof that
-    function submitProof(bytes calldata _proof, bytes32 _nullifierRoot) external onlyOwner{
-        bytes32[] memory publicInputs = new bytes32[](1);
+    function submitProof(bytes calldata _proof, bytes32 _nullifierRoot, bytes32 _utxoRoot) external onlyOwner{
+        bytes32[] memory publicInputs = new bytes32[](2);
         publicInputs[0] = _nullifierRoot;
+        publicInputs[1] = _utxoRoot;
 
         require(verifier.verify(_proof, publicInputs), "invalid proof");
 
         nullifierRoot = _nullifierRoot;
+        utxoRoot = _utxoRoot;
     } 
 
     //transaction UTXO should be empty
     function initiateExit(UTXO calldata _utxo) external {
-        bytes32 messageHash = keccak256(abi.encodePacked(_utxo, (UTXO)));
+        bytes32 messageHash = keccak256(abi.encodePacked(_utxo.value, _utxo.spender_pub_key_x, _utxo.spender_pub_key_y, _utxo.token));
 
-        exits[messageHash][msg.sender] = Balance {amount: _utxo.value, token: _utxo.token, challengePeriodEnd: block.timestamp + challengePeriod};
+        exits[messageHash][msg.sender] = Balance({amount: _utxo.value, token: _utxo.token, challengePeriodEnd: block.timestamp + challengePeriod});
 
-        emit ExitInitiated(messageHash);
+        emit ExitInitiated(msg.sender, messageHash);
     }
 
     function finalizeExit(bytes32 _messageHash) external nonReentrant {
@@ -86,8 +84,17 @@ contract L1Exiter is Ownable, ReentrancyGuard {
     ///@param _nullifierSiblings - nullifier tree sibling nodes. keccak256(value: UTXO, nextVal, nextIndex)
     function challengeUTXOAlreadySpent(address _spender, bytes32 _messageHash, bytes32 _nullifierTreeLeaf, bytes32[] calldata _nullifierSiblings) external {
         //if at any point in the future the message exists in the nullifier tree then it has been spent.
-        require(_nullifierSiblings.verifyCalldata(nullifierTreeRoot, _nullifierTreeLeaf), "invalid merkle proof");
+        require(_nullifierSiblings.verifyCalldata(nullifierRoot, _nullifierTreeLeaf), "invalid merkle proof");
         
+        //penalty
+        Balance storage balance = exits[_messageHash][_spender];
+        balance.amount = 0;
+    }
+
+    // prove that the spender is trying to exit with a UTXO that does not exist in the UTXO tree
+    function challengeUTXODoesNotExist(address _spender, bytes32 _messageHash, bytes32[] calldata _utxoTreeSiblings) external {
+       require(!_utxoTreeSiblings.verifyCalldata(utxoRoot, _messageHash), "UTXO is in tree");
+
         //penalty
         Balance storage balance = exits[_messageHash][_spender];
         balance.amount = 0;
@@ -101,7 +108,7 @@ contract L1Exiter is Ownable, ReentrancyGuard {
         // deposits[msg.sender][_token] += _value;
     }
 
-    fallback() external payable {
+    receive() external payable {
         // deposits[msg.sender][address(0)] += msg.value; // we consider address zero as ETH deposit, everything else is ERC20 deposit
     } 
 }
