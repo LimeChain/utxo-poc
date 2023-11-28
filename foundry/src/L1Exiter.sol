@@ -42,6 +42,8 @@ contract L1Exiter is Ownable, ReentrancyGuard {
     mapping(bytes32 => mapping(address => Balance)) public exits;
 
     event ExitInitiated(address spender, bytes32 indexed messageHash);
+    event ExitFinalized(bytes32 indexed messageHash);
+    event Deposit(address user, address token, uint256 value);
 
     constructor(address _verifier, uint256 _challengePeriod) Ownable(msg.sender) {
         require(_verifier != address(0));
@@ -55,6 +57,7 @@ contract L1Exiter is Ownable, ReentrancyGuard {
         bytes32[] memory publicInputs = new bytes32[](2);
         publicInputs[0] = _nullifierRoot;
         publicInputs[1] = _utxoRoot;
+        
 
         require(verifier.verify(_proof, publicInputs), "invalid proof");
 
@@ -86,6 +89,8 @@ contract L1Exiter is Ownable, ReentrancyGuard {
         }
 
         balance.amount = 0;
+
+        emit ExitFinalized(_messageHash);
     }
 
     // prove double spend attempt for UTXO
@@ -167,6 +172,8 @@ contract L1Exiter is Ownable, ReentrancyGuard {
         } else {
             IERC20(_utxo.token).safeTransfer(msg.sender, _utxo.value);
         }
+
+        emit ExitFinalized(messageHash);
     }
 
     //NOTE: deposit functions are needed only to simulate sandbox Validium, in real cases the tokens are going to already be in circulation
@@ -174,10 +181,10 @@ contract L1Exiter is Ownable, ReentrancyGuard {
     //ERC20 must be approved beforehand
     function deposit(address _token, uint256 _value) external {
         IERC20(_token).safeTransferFrom(msg.sender, address(this), _value);
-        // deposits[msg.sender][_token] += _value;
+        emit Deposit(msg.sender, _token, _value);
     }
 
     receive() external payable {
-        // deposits[msg.sender][address(0)] += msg.value; // we consider address zero as ETH deposit, everything else is ERC20 deposit
+        emit Deposit(msg.sender, address(0), msg.value);
     }
 }
