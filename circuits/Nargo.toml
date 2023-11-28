@@ -1,2 +1,2 @@
 [workspace]
-members = ["crates/utxo", "crates/low-nullifier", "crates/aggregator"]
+members = ["crates/utxo-inputs", "crates/utxo-outputs", "crates/utxo-ownership", "crates/utxo-signature", "crates/low-nullifier", "crates/aggregator"]

@@ -1,6 +1,7 @@
 use crate::utxo::UTXO;
 use crate::merkle_root;
 use crate::biguint::BigUint56;
+use crate::indexed_merkle_leaf::IndexedMerkleLeaf;
 
 struct Transaction<N,M> {
     inputs: [UTXO; N], // reference to the previous UTXO output
@@ -53,6 +54,27 @@ impl<N,M> Transaction<N,M> {
         
         //sum of inputs should be less than sum of outputs. The difference is refunded to the sender
         assert(total_value_inputs.gte(total_value_outputs));
+    }
+
+    // here new nullifier is the value of the input UTXO
+    fn verify_low_nullifier(self: Self, low_nullifier_leaf: [IndexedMerkleLeaf; N], low_nullifier_root: [u8; 32], low_nullifier_path_indices: [Field; 32], low_nullifier_siblings: [[u8; 32]; 32]) {
+        for i in 0 .. self.inputs.len() {
+            let low_nullifier_hash = low_nullifier_leaf[i].to_bytes_32();
+            let computed_root = merkle_root::compute_merkle_root(low_nullifier_hash, low_nullifier_path_indices, low_nullifier_siblings);
+            assert(low_nullifier_root == computed_root);
+
+            let low_nullifier_value = BigUint56::from_bytes_32(low_nullifier_leaf[i].val.value);
+            //NOTE: we are assuming we have only 1 input to verify
+            let new_nullifier_value = BigUint56::from_bytes_32(self.inputs[i].value);
+            if(low_nullifier_leaf[i].nextIdx == 0) {
+                //Special case, the low leaf is at the very end, so the new_value must be higher than all values in the tree
+                assert(low_nullifier_value.lt(new_nullifier_value));
+            } else {
+                let low_nullifier_next_value = BigUint56::from_bytes_32(low_nullifier_leaf[i].nextVal.value);
+                assert(low_nullifier_next_value.gt(new_nullifier_value));
+                assert(low_nullifier_value.lt(new_nullifier_value));
+            }
+        }
     }
 
 }

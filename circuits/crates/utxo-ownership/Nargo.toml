@@ -1,5 +1,5 @@
 [package]
-name = "utxo"
+name = "utxo_ownership"
 type = "bin"
 authors = [""]
 compiler_version = ">=0.18"
