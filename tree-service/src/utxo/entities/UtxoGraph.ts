@@ -1,6 +1,7 @@
-import ParsedEvent from '../../eth-observer/entities/ParsedEvent';
+import RawTransaction from '../../eth-observer/entities/RawTransaction';
 import MerkleTree from '../../merkle-tree/entities/MerkleTree';
 import UtxoNode from './UtxoNode';
+import UtxoTransaction from './UtxoTransaction';
 
 export default class UtxoGraph {
 
@@ -10,13 +11,21 @@ export default class UtxoGraph {
 
     graph: Map<string, UtxoNode> = new Map();
 
-    processParsedEvent(parsedEvent: ParsedEvent): UtxoNode[] | null {
-        const spendUtxoNodes: UtxoNode[] = [];
+    getPubKeyX: (address: string) => string;
+    getPubKeyY: (address: string) => string;
+
+    constructor(getPubKeyX: (address: string) => string, getPubKeyY: (address: string) => string) {
+        this.getPubKeyX = getPubKeyX;
+        this.getPubKeyY = getPubKeyY;
+    }
+
+    processRawTransation(rawTransaction: RawTransaction): UtxoTransaction | null {
+        const utxoTransaction = new UtxoTransaction(this.getPubKeyX(rawTransaction.signerAddr), this.getPubKeyY(rawTransaction.signerAddr), rawTransaction.signature, rawTransaction.hash);
 
         let totalUnspentValue = 0n;
-        if (parsedEvent.isTransfer() === true || parsedEvent.isWithdraw() === true) {
+        if (rawTransaction.isTransfer() === true || rawTransaction.isWithdraw() === true) {
             // get all unspent nodes' hashes
-            const utxoNodeHashes = this.wallets.get(parsedEvent.privKey);
+            const utxoNodeHashes = this.wallets.get(rawTransaction.fromAddr);
             if (utxoNodeHashes === undefined) {
                 console.log('Error: Insufficient funds');
                 return null;
@@ -52,7 +61,7 @@ export default class UtxoGraph {
             let lastIncludedIndex = -1;
             for (let i = 0; i < unspentNodes.length; ++i) {
                 totalUnspentValue += unspentNodes[i].value;
-                if (totalUnspentValue >= parsedEvent.value) {
+                if (totalUnspentValue >= rawTransaction.value) {
                     lastIncludedIndex = i;
                     break;
                 }
@@ -65,33 +74,37 @@ export default class UtxoGraph {
 
             // spend nodes
             for (let i = 0; i <= lastIncludedIndex; ++i) {
-                spendUtxoNodes.push(unspentNodes[i]);
+                utxoTransaction.inputs.push(unspentNodes[i]);
                 this.burnUtxoNode(unspentNodes[i]);
             }
         }
 
-        if (parsedEvent.isTransfer() === true || parsedEvent.isDeposit() === true) {
+        if (rawTransaction.isTransfer() === true || rawTransaction.isDeposit() === true) {
             // create unspent nodes
-            this.mintUtxoNode(parsedEvent.pubKey, parsedEvent.value);
+            const utxoNode = this.mintUtxoNode(this.getPubKeyX(rawTransaction.toAddr), this.getPubKeyX(rawTransaction.toAddr), rawTransaction.toAddr, rawTransaction.value, rawTransaction.erc20Addr);
+            utxoTransaction.outputs.push(utxoNode);
         }
 
-        if (parsedEvent.isTransfer() === true || parsedEvent.isWithdraw() === true) {
+        if (rawTransaction.isTransfer() === true || rawTransaction.isWithdraw() === true) {
             // create the unspent change node
-            const change = totalUnspentValue - parsedEvent.value;
+            const change = totalUnspentValue - rawTransaction.value;
             if (change > 0n) {
-                this.mintUtxoNode(parsedEvent.privKey, change);
+                const utxoNode = this.mintUtxoNode(this.getPubKeyX(rawTransaction.fromAddr), this.getPubKeyX(rawTransaction.fromAddr), rawTransaction.fromAddr, change, rawTransaction.erc20Addr);
+                utxoTransaction.outputs.push(utxoNode);
             }
         }
 
-        return spendUtxoNodes;
+        return utxoTransaction;
     }
 
-    mintUtxoNode(pubKey: string, value: bigint) {
-        const utxoNode = UtxoNode.newUnspentUtxoNode(pubKey, value);
+    mintUtxoNode(pubKeyX: string, pubKeyY: string, addr: string, value: bigint, erc20Addr: string): UtxoNode {
+        const utxoNode = UtxoNode.newUnspentUtxoNode(pubKeyX, pubKeyY, addr, value, erc20Addr);
 
-        this.addToWallet(pubKey, utxoNode);
-        this.graph.set(utxoNode.hash, utxoNode);
+        this.addToWallet(addr, utxoNode);
+        this.graph.set(utxoNode.getHashAsString(), utxoNode);
         this.merkleTree.appendLeaf(utxoNode);
+
+        return utxoNode;
     }
 
     burnUtxoNode(utxoNode: UtxoNode): void {
@@ -99,23 +112,23 @@ export default class UtxoGraph {
         this.removeFromWallet(utxoNode);
     }
 
-    addToWallet(pubKey: string, utxoNode: UtxoNode): void {
-        let set = this.wallets.get(pubKey);
+    addToWallet(addr: string, utxoNode: UtxoNode): void {
+        let set = this.wallets.get(addr);
         if (set === undefined) {
-            this.wallets.set(pubKey, set = new Set());
+            this.wallets.set(addr, set = new Set());
         }
 
-        set.add(utxoNode.hash);
+        set.add(utxoNode.getHashAsString());
     }
 
     removeFromWallet(utxoNode: UtxoNode): void {
-        const set = this.wallets.get(utxoNode.pubKey);
+        const set = this.wallets.get(utxoNode.addr);
         if (set === undefined) {
             console.log('Error: Trying to remove utxo from a wallet that does not exists');
             return;
         }
 
-        set.delete(utxoNode.hash);
+        set.delete(utxoNode.getHashAsString());
     }
 
     printAccountBalances() {

@@ -2,30 +2,33 @@ import HashUtils from '../../core/utilities/HashUtils';
 import MerkleTreeNode from './MerkleTreeNode';
 
 const MERKLE_ROOT_INDEX = 1n;
-const MERKLE_DEPTH = 32n;
 
-export default class MerkleTree<N extends MerkleTreeNode> {
+export default class MerkleTree<T extends MerkleTreeNode> {
 
     depth: bigint;
-    merkleTree: Map<bigint, string> = new Map();
-    leaves: N[] = [];
+    merkleTree: Map<bigint, Buffer> = new Map();
+    leaves: T[] = [];
 
     constructor(depth = 32n) {
         this.depth = depth;
     }
 
-    getRootHash(): string {
+    getRootHash(): Buffer {
         return this.merkleTree.get(MERKLE_ROOT_INDEX)!;
     }
 
-    appendLeaf(merkleTreeNode: N) {
+    getRootHashAsString(): string {
+        return this.getRootHash().toString('hex');
+    }
+
+    appendLeaf(merkleTreeNode: T) {
         this.leaves.push(merkleTreeNode);
         this.updateMerkleTree(this.leaves.length - 1);
     }
 
     updateMerkleTree(leafIndex: number) {
         const nodeHash = this.leaves[leafIndex].hash;
-        const merkleLeafIndex = (MERKLE_ROOT_INDEX << MERKLE_DEPTH) + BigInt(leafIndex);
+        const merkleLeafIndex = (MERKLE_ROOT_INDEX << this.depth) + BigInt(leafIndex);
 
         this.merkleTree.set(merkleLeafIndex, nodeHash);
 
@@ -39,9 +42,9 @@ export default class MerkleTree<N extends MerkleTreeNode> {
             const merkleLeftLeafIndex = parentMerkleLeafIndex << 1n;
             const merkleRightLeafIndex = merkleLeftLeafIndex + 1n;
 
-            const leftNodeHash = this.merkleTree.get(merkleLeftLeafIndex) ?? '';
-            const rightNodeHash = this.merkleTree.get(merkleRightLeafIndex) ?? '';
-            const parentNodeHashContent = leftNodeHash + rightNodeHash;
+            const leftNodeHash = this.merkleTree.get(merkleLeftLeafIndex) ?? Buffer.alloc(32);
+            const rightNodeHash = this.merkleTree.get(merkleRightLeafIndex) ?? Buffer.alloc(32);
+            const parentNodeHashContent = Buffer.concat([leftNodeHash, rightNodeHash]);
             const parentNodeHash = HashUtils.createHash(parentNodeHashContent);
             this.merkleTree.set(parentMerkleLeafIndex, parentNodeHash);
 

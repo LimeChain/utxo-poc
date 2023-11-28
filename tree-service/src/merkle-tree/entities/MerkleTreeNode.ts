@@ -1,5 +1,9 @@
 export default class MerkleTreeNode {
 
-    hash: string = '';
+    hash: Buffer = Buffer.alloc(0);
+
+    getHashAsString(): string {
+        return this.hash.toString('hex');
+    }
 
 }

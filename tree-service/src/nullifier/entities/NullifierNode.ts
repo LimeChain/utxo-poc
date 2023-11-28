@@ -10,14 +10,10 @@ export default class NullifierNode extends MerkleTreeNode {
     static newInstance(privKey: string, hash: string) {
         const node = new NullifierNode();
 
-        node.value = HashUtils.createHash(privKey + hash);
+        node.value = privKey + hash;
         node.hash = HashUtils.createHash(node.value);
 
         return node;
-    }
-
-    getHash(): string {
-        return this.hash;
     }
 
 }

@@ -1,4 +1,4 @@
-import ParsedEvent from '../entities/ParsedEvent';
+import RawTransaction from '../entities/RawTransaction';
 import { ValidiumSmartContractRepo } from './repos/ValidiumSmartContractRepo';
 
 export class ValidiumSmartContractUseCases {
@@ -9,8 +9,8 @@ export class ValidiumSmartContractUseCases {
         this.validiumSmartContractRepo = validiumSmartContractRepo;
     }
 
-    fetchEvents(fromHeight: number, toHeight: number): Promise<ParsedEvent[]> {
-        return this.validiumSmartContractRepo.fetchEvents(fromHeight, toHeight);
+    fetchRawTransactions(fromHeight: number, toHeight: number): Promise<RawTransaction[]> {
+        return this.validiumSmartContractRepo.fetchRawTransactions(fromHeight, toHeight);
     }
 
 }

@@ -1,7 +1,7 @@
-import ParsedEvent from '../../entities/ParsedEvent';
+import RawTransaction from '../../entities/RawTransaction';
 
 export interface ValidiumSmartContractRepo {
 
-    fetchEvents(fromHeight: number, toHeight: number): Promise<ParsedEvent[]>;
+    fetchRawTransactions(fromHeight: number, toHeight: number): Promise<RawTransaction[]>;
 
 }
