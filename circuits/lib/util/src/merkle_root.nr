@@ -1,6 +1,6 @@
 use dep::std;
 
-fn compute_merkle_root(leaf: [u8; 32], path_indices: [Field; 32], siblings: [[u8; 32]; 32]) -> [u8; 32] {
+pub fn compute_merkle_root(leaf: [u8; 32], path_indices: [Field; 32], siblings: [[u8; 32]; 32]) -> [u8; 32] {
     let mut current = leaf;
     for i in 0..32 { //depth 32
         let is_right = (path_indices[i] == 1) as bool;

@@ -1,11 +1,11 @@
 use dep::std;
-use crate::output::Output;
+use crate::utxo::UTXO;
 
 global INDEXED_MERKLE_LEAF_SIZE = 236; // 2 * OUTPUT_SIZE + 4 (nextIdx)
 
 struct IndexedMerkleLeaf {
-    val: Output,
-    nextVal: Output,
+    val: UTXO,
+    nextVal: UTXO,
     nextIdx: u32,
 }
 

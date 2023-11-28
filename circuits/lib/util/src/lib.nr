@@ -1,5 +1,5 @@
 mod indexed_merkle_leaf;
-mod output;
+mod utxo;
 mod signed_transaction;
 mod transaction;
 mod merkle_root;
