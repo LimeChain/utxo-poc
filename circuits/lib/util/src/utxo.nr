@@ -1,12 +1,13 @@
 use dep::std;
 
-global UTXO_SIZE = 116;
+global UTXO_SIZE = 124;
 
 struct UTXO {
     value: [u8; 32], // represents u256 value of ERC20 token contract
     spender_pub_key_x: [u8; 32],
     spender_pub_key_y: [u8; 32],
     erc20_address: [u8; 20], // represents address of ERC20 token contract. Ised as an ID. If it's null we can consider the transfer to be ETH transfer
+    nonce: u64
 }
 
 impl UTXO {
@@ -29,6 +30,12 @@ impl UTXO {
         }
         for j in 0..20 {
             arr[index] = self.erc20_address[j];
+            index += 1;
+        }
+        
+        for bit_pos in 0..8 {
+            let shift_amount: u64 = 56 - (bit_pos * 8) as u64;
+            arr[index] = ((self.nonce >> shift_amount) & 255) as u8;
             index += 1;
         }
         

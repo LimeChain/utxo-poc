@@ -10,19 +10,19 @@ struct Transaction<N,M> {
 
 impl<N,M> Transaction<N,M> {
 
-    fn verify_utxo_inputs(self: Self, utxo_before_root: [u8; 32], utxo_before_path_indices: [Field; 32], utxo_before_siblings: [[u8; 32]; 32]) {
+    fn verify_utxo_inputs(self: Self, root: [u8; 32], are_nodes_right: [[Field; 32]; N], siblings: [[[u8; 32]; 32]; N]) {
         for i in 0..self.inputs.len() {
             let input = self.inputs[i];
-            let computed_root = merkle_root::compute_merkle_root(input.to_bytes_32(), utxo_before_path_indices, utxo_before_siblings);
-            assert(utxo_before_root == computed_root);
+            let computed_root = merkle_root::compute_merkle_root(input.to_bytes_32(), are_nodes_right[i], siblings[i]);
+            assert(root == computed_root);
         }
     }
 
-    fn verify_utxo_outputs(self: Self, utxo_after_root: [u8; 32], utxo_after_path_indices: [Field; 32], utxo_after_siblings: [[u8; 32]; 32]) {
+    fn verify_utxo_outputs(self: Self, root: [u8; 32], are_nodes_right: [[Field; 32]; M], siblings: [[[u8; 32]; 32]; M]) {
         for i in 0..self.outputs.len() {
             let output = self.outputs[i];
-            let computed_root = merkle_root::compute_merkle_root(output.to_bytes_32(), utxo_after_path_indices, utxo_after_siblings);
-            assert(utxo_after_root == computed_root);
+            let computed_root = merkle_root::compute_merkle_root(output.to_bytes_32(), are_nodes_right[i], siblings[i]);
+            assert(root == computed_root);
         }
     }
 
@@ -57,11 +57,11 @@ impl<N,M> Transaction<N,M> {
     }
 
     // here new nullifier is the value of the input UTXO
-    fn verify_low_nullifier(self: Self, low_nullifier_leaf: [IndexedMerkleLeaf; N], low_nullifier_root: [u8; 32], low_nullifier_path_indices: [Field; 32], low_nullifier_siblings: [[u8; 32]; 32]) {
+    fn verify_low_nullifier(self: Self, low_nullifier_leaf: [IndexedMerkleLeaf; N], root: [u8; 32], are_nodes_right: [[Field; 32]; N], siblings: [[[u8; 32]; 32]; N]) {
         for i in 0 .. self.inputs.len() {
             let low_nullifier_hash = low_nullifier_leaf[i].to_bytes_32();
-            let computed_root = merkle_root::compute_merkle_root(low_nullifier_hash, low_nullifier_path_indices, low_nullifier_siblings);
-            assert(low_nullifier_root == computed_root);
+            let computed_root = merkle_root::compute_merkle_root(low_nullifier_hash, are_nodes_right[i], siblings[i]);
+            assert(root == computed_root);
 
             let low_nullifier_value = BigUint56::from_bytes_32(low_nullifier_leaf[i].val.value);
             //NOTE: we are assuming we have only 1 input to verify

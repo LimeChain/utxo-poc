@@ -1,7 +1,7 @@
 use dep::std;
 use crate::utxo::UTXO;
 
-global INDEXED_MERKLE_LEAF_SIZE = 236; // 2 * OUTPUT_SIZE + 4 (nextIdx)
+global INDEXED_MERKLE_LEAF_SIZE = 252; // 2 * OUTPUT_SIZE + 4 (nextIdx)
 
 struct IndexedMerkleLeaf {
     val: UTXO,
@@ -33,6 +33,12 @@ impl IndexedMerkleLeaf {
             index += 1;
         }
 
+        for bit_pos in 0..8 {
+            let shift_amount: u64 = 56 - (bit_pos * 8) as u64;
+            arr[index] = ((self.val.nonce >> shift_amount) & 255) as u8;
+            index += 1;
+        }
+
         for j in 0..32 {
             arr[index] = self.nextVal.value[j];
             index += 1;
@@ -47,6 +53,12 @@ impl IndexedMerkleLeaf {
         }
         for j in 0..20 {
             arr[index] = self.nextVal.erc20_address[j];
+            index += 1;
+        }
+
+        for bit_pos in 0..8 {
+            let shift_amount: u64 = 56 - (bit_pos * 8) as u64;
+            arr[index] = ((self.nextVal.nonce >> shift_amount) & 255) as u8;
             index += 1;
         }
 
