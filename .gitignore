@@ -1,3 +1,4 @@
 tree-service/.env
 tree-service/node_modules
 tree-service/build
+foundry/lib
