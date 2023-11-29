@@ -32,6 +32,15 @@ export default class EthObserver {
         const utxoTransactions = await this.utxoStore.update(rawTransactions);
         this.nullifierStore.update(utxoTransactions);
 
+        for (let i = 0; i < utxoTransactions.length; ++i) {
+            const utxoTransaction = utxoTransactions[i];
+            if (utxoTransaction.isSupportedByCircuits() === false) {
+                continue;
+            }
+
+            this.utxoStore.generateUtxoSignatureProove(utxoTransaction);
+        }
+
         // setTimeout(this.run, parseInt(process.env.VALIDIUM_PULL_INTERVAL ?? "15000"));
     }
 

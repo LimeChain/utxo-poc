@@ -17,6 +17,10 @@ export default class UtxoTransaction {
         this.txHash = txHash;
     }
 
+    isSupportedByCircuits(): boolean {
+        return this.inputs.length === 1 && this.outputs.length === 2;
+    }
+
     getPubKeyXAsUint8Array(): Uint8Array {
         return Uint8Array.from(Buffer.from(this.pubKeyX, 'hex'));
     }
@@ -26,7 +30,7 @@ export default class UtxoTransaction {
     }
 
     getSignatureAsUint8Array(): Uint8Array {
-        return Uint8Array.from(Buffer.from(this.signature.r + this.signature.v, 'hex'));
+        return Uint8Array.from(Buffer.from(this.signature.r.substring(2) + this.signature.s.substring(2), 'hex'));
     }
 
     getHashAsUint8Array(): Uint8Array {

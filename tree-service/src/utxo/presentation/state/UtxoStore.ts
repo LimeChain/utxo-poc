@@ -1,17 +1,20 @@
-import injector from '../../../core/utilities/injector/Injector';
 import RawTransaction from '../../../eth-observer/entities/RawTransaction';
 import PublicKeysStore from '../../../eth-observer/presentation/state/PublicKeysStore';
 import UtxoGraph from '../../entities/UtxoGraph';
 import UtxoTransaction from '../../entities/UtxoTransaction';
+import UtxoUseCases from '../../use-cases/UtxoUseCases';
 
 export default class UtxoStore {
 
     publicKeysStore: PublicKeysStore;
+    utxoUseCases: UtxoUseCases;
 
     utxoGraph: UtxoGraph;
 
-    constructor() {
-        this.publicKeysStore = injector.getPublicKeysStore();
+    constructor(publicKeysStore: PublicKeysStore, utxoUseCases: UtxoUseCases) {
+        this.publicKeysStore = publicKeysStore;
+        this.utxoUseCases = utxoUseCases;
+
         this.utxoGraph = new UtxoGraph(this.publicKeysStore.getPublicKeyX, this.publicKeysStore.getPublicKeyY);
     }
 
@@ -35,6 +38,10 @@ export default class UtxoStore {
         this.utxoGraph.printAccountBalances();
 
         return utxoTransactions;
+    }
+
+    async generateUtxoSignatureProove(utxoTransaction: UtxoTransaction) {
+        await this.utxoUseCases.writeUtxoSignature(utxoTransaction);
     }
 
 }
