@@ -21,7 +21,7 @@ export class ValidiumSmartContractRepoImpl implements ValidiumSmartContractRepo 
         // TODO: Use debug trace to get contract information
 
         // start hard coded values
-        const depositTx = ["0x665c629a3977623c163a66a4c8dbb1b4a6b6d5671aa25d523cebc98a99b2e099", "0x3de69f31025aa46783da895550ca70f2b3200b171ba059db1a096e02eaf29070", "0x1f1f8fdde5000b66fbf0e6d406ee6761ccd02988a09db5c145369ef54ec492af"];
+        const depositTx = ["0x4901b3236f2240847e12c982a6bcef48fe1b87afd24e7e1a4584443f3d59fb4f", "0xbfbf0e93ed37bf983d4635d02933191c49b57de73a296998abb04e2d243faba7", "0x30fbb093b0ba7b0562d0f0be88ccec62c32cdcb258fe7330de4e5a44e2957d51"];
         const addressesSet = new Set<string>();
         let saveSig = null;
         let saveHash = null;

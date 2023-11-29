@@ -1,4 +1,3 @@
-import { JsonMap } from '@iarna/toml';
 import UtxoNode from '../../entities/UtxoNode';
 import Output from './Output';
 
@@ -16,11 +15,19 @@ export default class Transaction {
         return transaction;
     }
 
-    toJsonMap(): JsonMap {
-        return {
-            'inputs': this.inputs.toJsonMap(),
-            'outputs': this.outputs.map((j) => j.toJsonMap())
-        }
+    toToml(path: string): string {
+        const buffers: string[] = [];
+
+        buffers.push(this.inputs.toToml(path + '.inputs'))
+        buffers.push(`\n`);
+        this.outputs.forEach((output, i) => {
+            buffers.push(output.toToml(path + '.outputs'));
+            if (i + 1 != this.outputs.length) {
+                buffers.push(`\n`);
+            }
+        });
+
+        return buffers.join('\n');
     }
 
 }

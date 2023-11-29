@@ -39,6 +39,7 @@ export default class EthObserver {
             }
 
             this.utxoStore.generateUtxoSignatureProove(utxoTransaction);
+            break;
         }
 
         // setTimeout(this.run, parseInt(process.env.VALIDIUM_PULL_INTERVAL ?? "15000"));
