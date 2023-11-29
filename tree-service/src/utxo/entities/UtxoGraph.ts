@@ -81,7 +81,7 @@ export default class UtxoGraph {
 
         if (rawTransaction.isTransfer() === true || rawTransaction.isDeposit() === true) {
             // create unspent nodes
-            const utxoNode = this.mintUtxoNode(this.getPubKeyX(rawTransaction.toAddr), this.getPubKeyX(rawTransaction.toAddr), rawTransaction.toAddr, rawTransaction.value, rawTransaction.erc20Addr);
+            const utxoNode = this.mintUtxoNode(this.getPubKeyX(rawTransaction.toAddr), this.getPubKeyY(rawTransaction.toAddr), rawTransaction.toAddr, rawTransaction.value, rawTransaction.erc20Addr);
             utxoTransaction.outputs.push(utxoNode);
         }
 
@@ -89,7 +89,7 @@ export default class UtxoGraph {
             // create the unspent change node
             const change = totalUnspentValue - rawTransaction.value;
             if (change > 0n) {
-                const utxoNode = this.mintUtxoNode(this.getPubKeyX(rawTransaction.fromAddr), this.getPubKeyX(rawTransaction.fromAddr), rawTransaction.fromAddr, change, rawTransaction.erc20Addr);
+                const utxoNode = this.mintUtxoNode(this.getPubKeyX(rawTransaction.fromAddr), this.getPubKeyY(rawTransaction.fromAddr), rawTransaction.fromAddr, change, rawTransaction.erc20Addr);
                 utxoTransaction.outputs.push(utxoNode);
             }
         }
