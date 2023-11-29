@@ -19,15 +19,19 @@ RUN if [ $USER_NAME != 'root' ]; then \
     echo "root:$PASS" | chpasswd
 
 # install sudo
-RUN apt-get update && apt-get -y install sudo git
+RUN apt-get update && apt-get -y install sudo git libc++-dev
 
 # install nargo
 RUN cd /tmp && \
     curl -o ./nargo-x86_64-unknown-linux-gnu.tar.gz -L https://github.com/noir-lang/noir/releases/download/v0.19.2/nargo-x86_64-unknown-linux-gnu.tar.gz && \
     tar -xvf ./nargo-x86_64-unknown-linux-gnu.tar.gz -C /usr/bin/
 
+
 WORKDIR $MNT_PATH
 
 USER $USER_NAME
+
+RUN curl -L https://foundry.paradigm.xyz | bash && \
+    ~/.foundry/bin/foundryup
 
 CMD ["sleep", "infinity"]
