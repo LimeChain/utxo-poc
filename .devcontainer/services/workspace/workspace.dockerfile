@@ -18,8 +18,13 @@ RUN if [ $USER_NAME != 'root' ]; then \
     echo "$USER_NAME:$PASS" | chpasswd && \
     echo "root:$PASS" | chpasswd
 
-#install sudo
+# install sudo
 RUN apt-get update && apt-get -y install sudo git
+
+# install nargo
+RUN cd /tmp && \
+    curl -o ./nargo-x86_64-unknown-linux-gnu.tar.gz -L https://github.com/noir-lang/noir/releases/download/v0.6.0/nargo-x86_64-unknown-linux-gnu.tar.gz && \
+    tar -xvf ./nargo-x86_64-unknown-linux-gnu.tar.gz -C /usr/bin/
 
 WORKDIR $MNT_PATH
 
