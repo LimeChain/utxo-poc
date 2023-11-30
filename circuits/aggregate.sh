@@ -31,7 +31,14 @@ for SUBDIR in "${INPUT_SUBDIRS[@]}"; do
     fi
 
     # Run the Python script with the current input file and append to the output file
+    # Pass the two additional command-line arguments to the Python script
     python "$PYTHON_SCRIPT" "$INPUT_FILE_PATH" "$PROOFS_DIRECTORY" "$OUTPUT_DIR"
 done
+
+echo "public_inputs_utxo_inputs = []" >> "$OUTPUT_DIR/Prover.toml"
+echo "public_inputs_utxo_ownership = []" >>"$OUTPUT_DIR/Prover.toml"
+echo "public_inputs_utxo_signature = []" >> "$OUTPUT_DIR/Prover.toml"
+echo "public_inputs_low_nullifier = [$1]" >> "$OUTPUT_DIR/Prover.toml"
+echo "public_inputs_utxo_outputs = [$2]" >> "$OUTPUT_DIR/Prover.toml"
 
 echo "Processing complete. Output saved in $OUTPUT_DIR/Prover.toml"

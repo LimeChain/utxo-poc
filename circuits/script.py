@@ -9,6 +9,19 @@ def split_hex_to_128bit_v2(hex_value):
     first_half, second_half = hex_value[:16], hex_value[16:]
     return str(int(first_half, 16)), str(int(second_half, 16))
 
+def extract_key_hash(lines):
+    """Extracts the key hash from the specified lines (7-9)."""
+    for line in lines[6:9]:
+        match = re.search(r"0x[0-9A-Fa-f]{64}", line)
+        if match:
+            return hex_to_decimal_string(match.group())
+    return None
+
+def hex_to_decimal_string(hex_value):
+    """Converts a hexadecimal value into a decimal string."""
+    return str(int(hex_value, 16))
+
+
 def process_file(input_file_path, proofs_dir, output_dir):
     # Extract the subdirectory name from the input file path
     input_subdir = os.path.basename(os.path.dirname(input_file_path))
@@ -31,11 +44,18 @@ def process_file(input_file_path, proofs_dir, output_dir):
     flat_matches = [match for sublist in matches for match in sublist]
     flat_split_values = [value for match in flat_matches for value in split_hex_to_128bit_v2(match)]
 
+    # Extract key hash (lines 7-9) and convert it to decimal
+    key_hash = extract_key_hash(lines)
+    if key_hash is None:
+        print("Key hash not found in the input file.")
+        return
 
     # Write the output to "Prover.toml" in the specified directory
     output_file_path = os.path.join(output_dir, "Prover.toml")
     with open(output_file_path, 'a') as output_file:
         output_file.write("verification_key_" + input_subdir + " = " + str(flat_split_values) + '\n')
+        output_file.write("key_hash_" + input_subdir + " = " + key_hash + '\n')
+        
 
 
     # Define the proofs file path

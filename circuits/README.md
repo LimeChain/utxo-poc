@@ -18,7 +18,12 @@ The resulting proof is stored in proofs/utxo_poc.proof file. The verifier expect
 /usr/bin/time -p -l nargo compile --package low_nullifier
 /usr/bin/time -p -l nargo compile --package aggregator
 ```
-- Generate verifier
+- Generate verifiers
 ```
 /usr/bin/time -p -l nargo codegen-verifier
+```
+- Generate aggregator Prover.toml
+```
+chmod +x aggregate.sh
+./aggregate.sh <low_nullifier_root> <utxo_root>
 ```
