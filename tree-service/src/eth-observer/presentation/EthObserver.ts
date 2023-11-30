@@ -27,13 +27,15 @@ export default class EthObserver {
 
     run = async () => {
         const rawTransactions = await this.validiumSmartContractStore.fetchRawTransactions();
-        if (rawTransactions.length !== 0) {
-            this.publicKeysStore.updatePubKeys(rawTransactions);
-            const utxoTransactions = await this.utxoStore.update(rawTransactions);
+
+        for (let i = 0; i < rawTransactions.length; ++i) {
+            const rawTransaction = rawTransactions[i];
+            this.publicKeysStore.updatePubKeys([rawTransaction]);
+            const utxoTransactions = await this.utxoStore.update([rawTransaction]);
             this.nullifierStore.update(utxoTransactions);
 
-            for (let i = 0; i < utxoTransactions.length; ++i) {
-                const utxoTransaction = utxoTransactions[i];
+            for (let j = 0; j < utxoTransactions.length; ++j) {
+                const utxoTransaction = utxoTransactions[j];
                 if (utxoTransaction.isSupportedByCircuits() === false) {
                     continue;
                 }
@@ -42,9 +44,28 @@ export default class EthObserver {
                 await this.utxoStore.generateUtxoOwnershipProve(utxoTransaction);
                 await this.utxoStore.generateUtxoOutputsProve(utxoTransaction);
                 await this.utxoStore.generateUtxoInputsProve(utxoTransaction);
-                break;
+                process.exit(0); // process a single transfer tx for now
             }
         }
+
+        // if (rawTransactions.length !== 0) {
+        //     this.publicKeysStore.updatePubKeys(rawTransactions);
+        //     const utxoTransactions = await this.utxoStore.update(rawTransactions);
+        //     this.nullifierStore.update(utxoTransactions);
+
+        //     for (let i = 0; i < utxoTransactions.length; ++i) {
+        //         const utxoTransaction = utxoTransactions[i];
+        //         if (utxoTransaction.isSupportedByCircuits() === false) {
+        //             continue;
+        //         }
+
+        //         await this.utxoStore.generateUtxoSignatureProve(utxoTransaction);
+        //         await this.utxoStore.generateUtxoOwnershipProve(utxoTransaction);
+        //         await this.utxoStore.generateUtxoOutputsProve(utxoTransaction);
+        //         await this.utxoStore.generateUtxoInputsProve(utxoTransaction);
+        //         break;
+        //     }
+        // }
 
         setTimeout(this.run, parseInt(process.env.VALIDIUM_PULL_INTERVAL ?? "15000"));
     }

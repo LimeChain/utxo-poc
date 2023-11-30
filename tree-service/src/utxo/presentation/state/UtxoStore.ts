@@ -33,7 +33,7 @@ export default class UtxoStore {
         });
 
         // console.log("UTXO GRAPH ============================================");
-        // console.log(this.utxoGraph);
+        // console.log(this.utxoGraph.merkleTree);
         // console.log("ACCOUNT BALANCES ============================================");
         // this.utxoGraph.printAccountBalances();
 

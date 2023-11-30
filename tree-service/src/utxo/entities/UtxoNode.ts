@@ -1,7 +1,7 @@
 import HashUtils from '../../core/utilities/HashUtils';
 import MerkleTreeNode from '../../merkle-tree/entities/MerkleTreeNode';
 
-let nonce: bigint = 0n;
+let nonce: bigint = 1n;
 
 export default class UtxoNode extends MerkleTreeNode {
 
