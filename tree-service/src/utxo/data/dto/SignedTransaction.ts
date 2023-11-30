@@ -15,7 +15,7 @@ export default class SignedTransaction {
         signedTransaction.pub_key_x = Array.from(utxoTransaction.getPubKeyXAsUint8Array());
         signedTransaction.pub_key_y = Array.from(utxoTransaction.getPubKeyYAsUint8Array());
         signedTransaction.signature = Array.from(utxoTransaction.getSignatureAsUint8Array());
-        signedTransaction.tx_hash = Array.from(utxoTransaction.getHashAsUint8Array());
+        signedTransaction.tx_hash = Array.from(utxoTransaction.getUnsignedTxHashAsUint8Array());
         signedTransaction.transaction = Transaction.fromUtxoNodes(utxoTransaction.inputs[0], utxoTransaction.outputs);
 
         return signedTransaction;

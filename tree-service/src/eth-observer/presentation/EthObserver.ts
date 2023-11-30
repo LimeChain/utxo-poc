@@ -38,7 +38,10 @@ export default class EthObserver {
                     continue;
                 }
 
-                this.utxoStore.generateUtxoSignatureProove(utxoTransaction);
+                await this.utxoStore.generateUtxoSignatureProve(utxoTransaction);
+                await this.utxoStore.generateUtxoOwnershipProve(utxoTransaction);
+                await this.utxoStore.generateUtxoOutputsProve(utxoTransaction);
+                await this.utxoStore.generateUtxoInputsProve(utxoTransaction);
                 break;
             }
         }

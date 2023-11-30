@@ -62,9 +62,6 @@ export default class UtxoNode extends MerkleTreeNode {
             result[i] = Number((this.nonce >> BigInt(shiftAmount)) & 0xFFn);
         }
 
-        console.log(this.nonce);
-        console.log(result);
-
         return result;
     }
 

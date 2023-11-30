@@ -32,16 +32,29 @@ export default class UtxoStore {
             // console.log('rootHash', this.utxoGraph.merkleTree.getRootHash());
         });
 
-        console.log("UTXO GRAPH ============================================");
-        console.log(this.utxoGraph);
-        console.log("ACCOUNT BALANCES ============================================");
-        this.utxoGraph.printAccountBalances();
+        // console.log("UTXO GRAPH ============================================");
+        // console.log(this.utxoGraph);
+        // console.log("ACCOUNT BALANCES ============================================");
+        // this.utxoGraph.printAccountBalances();
 
         return utxoTransactions;
     }
 
-    async generateUtxoSignatureProove(utxoTransaction: UtxoTransaction) {
+    async generateUtxoSignatureProve(utxoTransaction: UtxoTransaction) {
         await this.utxoUseCases.writeUtxoSignature(utxoTransaction);
     }
+
+    async generateUtxoOwnershipProve(utxoTransaction: UtxoTransaction) {
+        await this.utxoUseCases.writeUtxoOwnership(utxoTransaction);
+    }
+
+    async generateUtxoInputsProve(utxoTransaction: UtxoTransaction) {
+        await this.utxoUseCases.writeUtxoInputs(this.utxoGraph.merkleTree, utxoTransaction);
+    }
+
+    async generateUtxoOutputsProve(utxoTransaction: UtxoTransaction) {
+        await this.utxoUseCases.writeUtxoOutputs(this.utxoGraph.merkleTree, utxoTransaction);
+    }
+
 
 }

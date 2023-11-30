@@ -6,15 +6,15 @@ export default class UtxoTransaction {
     pubKeyX: string = '';
     pubKeyY: string = '';
     signature: Signature;
-    txHash: string = '';
+    unsignedTxHash: string = '';
     inputs: UtxoNode[] = [];
     outputs: UtxoNode[] = [];
 
-    constructor(pubKeyX: string, pubKeyY: string, signature: Signature, txHash: string) {
+    constructor(pubKeyX: string, pubKeyY: string, signature: Signature, unsignedTxHash: string) {
         this.pubKeyX = pubKeyX;
         this.pubKeyY = pubKeyY;
         this.signature = signature;
-        this.txHash = txHash;
+        this.unsignedTxHash = unsignedTxHash;
     }
 
     isSupportedByCircuits(): boolean {
@@ -33,8 +33,8 @@ export default class UtxoTransaction {
         return Uint8Array.from(Buffer.from(this.signature.r.substring(2) + this.signature.s.substring(2), 'hex'));
     }
 
-    getHashAsUint8Array(): Uint8Array {
-        return Uint8Array.from(Buffer.from(this.txHash.substring(2), 'hex'));
+    getUnsignedTxHashAsUint8Array(): Uint8Array {
+        return Uint8Array.from(Buffer.from(this.unsignedTxHash.substring(2), 'hex'));
     }
 
 }

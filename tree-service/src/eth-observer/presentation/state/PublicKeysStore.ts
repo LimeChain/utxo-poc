@@ -1,4 +1,4 @@
-import { SigningKey } from 'ethers';
+import { SigningKey, ethers } from 'ethers';
 import RawTransaction from '../../entities/RawTransaction';
 
 export default class PublicKeysStore {
@@ -25,8 +25,14 @@ export default class PublicKeysStore {
                 continue;
             }
 
-            const pubKeyUncompressed = SigningKey.recoverPublicKey(rawTransaction.hash!, rawTransaction.signature!);
+            const pubKeyUncompressed = SigningKey.recoverPublicKey(rawTransaction.unsignedHash, rawTransaction.signature);
             const pubKey = pubKeyUncompressed.slice(4);
+
+            const recoverAddress = ethers.recoverAddress(rawTransaction.unsignedHash, rawTransaction.signature);
+            if (recoverAddress.toLowerCase() != rawTransaction.signerAddr.toLowerCase()) {
+                console.log('Error recovering the address. Expected', rawTransaction.signerAddr.toLowerCase(), ' got ', recoverAddress.toLowerCase());
+                process.exit(1);
+            }
 
             this.pubKeyX.set(rawTransaction.signerAddr, pubKey.substring(0, 64));
             this.pubKeyY.set(rawTransaction.signerAddr, pubKey.substring(64));

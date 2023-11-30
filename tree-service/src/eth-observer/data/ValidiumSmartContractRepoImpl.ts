@@ -1,5 +1,5 @@
 import { ValidiumSmartContractRepo } from '../use-cases/repos/ValidiumSmartContractRepo';
-import { JsonRpcProvider, Signature, ethers } from 'ethers';
+import { JsonRpcProvider, ethers, Transaction } from 'ethers';
 // @ts-ignore
 import CudosMarketsContract from '../../../contracts/CudosMarkets';
 import RawTransaction from '../entities/RawTransaction';
@@ -35,15 +35,16 @@ export class ValidiumSmartContractRepoImpl implements ValidiumSmartContractRepo 
                     continue;
                 }
 
-                if (txResp.to === process.env.VALIDIUM_SMART_CONTRACT_ADDRESS) {
-                    rawTransactions.push(RawTransaction.newInstanceDeposit(txResp.value, "", txResp.from, txResp.hash, txResp.signature));
-                } else if (txResp.to === process.env.VALIDIUM_SMART_CONTRACT_ADDRESS) {
-                    // rawTransactions.push(RawTransaction.newInstanceWithdraw(txResp.value, "", "0x8cdeD8F7d124f4Bc54617663fdC58dF75946D0Ff", txResp.hash, txResp.signature));
-                } else {
-                    rawTransactions.push(RawTransaction.newInstanceTransfer(txResp.value, "", txResp.from, txResp.to, txResp.hash, txResp.signature));
-                }
+                const serializedTx = Transaction.from(txResp).unsignedSerialized;
+                const unsignedHash = ethers.keccak256(serializedTx);
 
-                console.log(txResp);
+                if (txResp.to === process.env.VALIDIUM_SMART_CONTRACT_ADDRESS) {
+                    rawTransactions.push(RawTransaction.newInstanceDeposit(txResp.value, "", txResp.from, txResp.hash, unsignedHash, txResp.signature));
+                } else if (txResp.to === process.env.VALIDIUM_SMART_CONTRACT_ADDRESS) {
+                    // rawTransactions.push(RawTransaction.newInstanceWithdraw(txResp.value, "", "0x8cdeD8F7d124f4Bc54617663fdC58dF75946D0Ff", txResp.hash, digest, txResp.signature));
+                } else {
+                    rawTransactions.push(RawTransaction.newInstanceTransfer(txResp.value, "", txResp.from, txResp.to, txResp.hash, unsignedHash, txResp.signature));
+                }
             }
         }
 

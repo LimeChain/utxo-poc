@@ -33,7 +33,7 @@ export default class MerkleTree<T extends MerkleTreeNode> {
 
     updateMerkleTree(merkleTreeNode: T) {
         const nodeHash = merkleTreeNode.hash;
-        const merkleLeafIndex = (MERKLE_ROOT_INDEX << (BigInt(this.depth - 1))) + BigInt(merkleTreeNode.leafIndex);
+        const merkleLeafIndex = merkleTreeNode.getMerkleLeafIndex(this.depth);
 
         this.merkleTree.set(merkleLeafIndex, nodeHash);
 
@@ -61,34 +61,33 @@ export default class MerkleTree<T extends MerkleTreeNode> {
         return Uint8Array.from(this.getRootHash());
     }
 
-    getPathToRoot(merkleTreeNode: T): Uint8Array {
+    getPathToRootAsUint8Array(merkleTreeNode: T): Uint8Array {
         const path = new Uint8Array(this.depth);
-        const leafIndex = merkleTreeNode.leafIndex;
+        const merkleLeafIndex = merkleTreeNode.getMerkleLeafIndex(this.depth);
 
         // last index is always 0
         path[this.depth - 1] = 0;
         for (let i = path.length - 1; i-- > 0;) {
             const bigI = BigInt(i);
-            path[i] = Number((leafIndex >> bigI) & 1n);
+            path[i] = Number((merkleLeafIndex >> bigI) & 1n);
         }
 
         return path;
     }
 
-    getPathToRootSiblingsHashes(merkleTreeNode: T): Uint8Array[] {
+    getPathToRootSiblingsHashesAsUint8Array(merkleTreeNode: T): Uint8Array[] {
         const result: Uint8Array[] = [];
-        let leafIndex = merkleTreeNode.leafIndex;
+        let merkleLeafIndex = merkleTreeNode.getMerkleLeafIndex(this.depth);
 
-        while (leafIndex > MERKLE_ROOT_INDEX) {
-            const siblingIndex = this.getSiblingIndex(leafIndex);
-            const siblingHash = this.merkleTree.get(siblingIndex);
+        while (merkleLeafIndex > 0) {
+            const siblingIndex = this.getSiblingIndex(merkleLeafIndex);
+            let siblingHash = this.merkleTree.get(siblingIndex);
             if (siblingHash === undefined) {
-                console.log('unable to find sibling with index', siblingIndex, 'from index', leafIndex);
-                process.exit(1);
+                siblingHash = Buffer.alloc(32);
             }
             result.push(Uint8Array.from(siblingHash));
 
-            leafIndex >>= 1n;
+            merkleLeafIndex >>= 1n;
         }
 
         return result;

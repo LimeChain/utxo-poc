@@ -20,7 +20,7 @@ export default class UtxoGraph {
     }
 
     processRawTransation(rawTransaction: RawTransaction): UtxoTransaction | null {
-        const utxoTransaction = new UtxoTransaction(this.getPubKeyX(rawTransaction.signerAddr), this.getPubKeyY(rawTransaction.signerAddr), rawTransaction.signature, rawTransaction.hash);
+        const utxoTransaction = new UtxoTransaction(this.getPubKeyX(rawTransaction.signerAddr), this.getPubKeyY(rawTransaction.signerAddr), rawTransaction.signature, rawTransaction.unsignedHash);
 
         let totalUnspentValue = 0n;
         if (rawTransaction.isTransfer() === true || rawTransaction.isWithdraw() === true) {

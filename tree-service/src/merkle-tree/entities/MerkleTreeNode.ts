@@ -7,4 +7,8 @@ export default class MerkleTreeNode {
         return this.hash.toString('hex');
     }
 
+    getMerkleLeafIndex(depth: number): bigint {
+        return (1n << (BigInt(depth - 1))) + BigInt(this.leafIndex);
+    }
+
 }
