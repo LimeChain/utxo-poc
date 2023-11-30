@@ -27,22 +27,23 @@ export default class EthObserver {
 
     run = async () => {
         const rawTransactions = await this.validiumSmartContractStore.fetchRawTransactions();
+        if (rawTransactions.length !== 0) {
+            this.publicKeysStore.updatePubKeys(rawTransactions);
+            const utxoTransactions = await this.utxoStore.update(rawTransactions);
+            this.nullifierStore.update(utxoTransactions);
 
-        this.publicKeysStore.updatePubKeys(rawTransactions);
-        const utxoTransactions = await this.utxoStore.update(rawTransactions);
-        this.nullifierStore.update(utxoTransactions);
+            for (let i = 0; i < utxoTransactions.length; ++i) {
+                const utxoTransaction = utxoTransactions[i];
+                if (utxoTransaction.isSupportedByCircuits() === false) {
+                    continue;
+                }
 
-        for (let i = 0; i < utxoTransactions.length; ++i) {
-            const utxoTransaction = utxoTransactions[i];
-            if (utxoTransaction.isSupportedByCircuits() === false) {
-                continue;
+                this.utxoStore.generateUtxoSignatureProove(utxoTransaction);
+                break;
             }
-
-            this.utxoStore.generateUtxoSignatureProove(utxoTransaction);
-            break;
         }
 
-        // setTimeout(this.run, parseInt(process.env.VALIDIUM_PULL_INTERVAL ?? "15000"));
+        setTimeout(this.run, parseInt(process.env.VALIDIUM_PULL_INTERVAL ?? "15000"));
     }
 
 }

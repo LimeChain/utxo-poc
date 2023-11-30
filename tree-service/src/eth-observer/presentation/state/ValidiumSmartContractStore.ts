@@ -26,6 +26,10 @@ export class ValidiumSmartContractStore {
 
     async fetchRawTransactions(): Promise<RawTransaction[]> {
         const ethBlockHeight = await this.ethObserverStore.fetchBlockNumber();
+        if (ethBlockHeight === this.lastCheckedEthBlockNumber) {
+            return [];
+        }
+
         const rawTransactions = await this.validiumSmartContractUseCases.fetchRawTransactions(this.lastCheckedEthBlockNumber + 1, ethBlockHeight);
         this.lastCheckedEthBlockNumber = ethBlockHeight;
 
