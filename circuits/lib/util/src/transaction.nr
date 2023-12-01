@@ -59,8 +59,7 @@ impl<N,M> Transaction<N,M> {
     // here new nullifier is the value of the input UTXO
     fn verify_low_nullifier(self: Self, low_nullifier_leaf: [IndexedMerkleLeaf; N], root: [u8; 32], are_nodes_right: [[Field; 32]; N], siblings: [[[u8; 32]; 32]; N]) {
         for i in 0 .. self.inputs.len() {
-            let low_nullifier_hash = low_nullifier_leaf[i].to_bytes_32();
-            let computed_root = merkle_root::compute_merkle_root(low_nullifier_hash, are_nodes_right[i], siblings[i]);
+            let computed_root = merkle_root::compute_merkle_root(low_nullifier_leaf[i].val, are_nodes_right[i], siblings[i]);
             assert(root == computed_root);
 
             // we are casting hash to number and checking hash values. 
