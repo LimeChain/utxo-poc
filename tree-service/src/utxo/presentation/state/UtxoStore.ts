@@ -40,19 +40,19 @@ export default class UtxoStore {
         return utxoTransactions;
     }
 
-    async generateUtxoSignatureProve(utxoTransaction: UtxoTransaction) {
+    async generateUtxoSignatureProve(utxoTransaction: UtxoTransaction): Promise<void> {
         await this.utxoUseCases.writeUtxoSignature(utxoTransaction);
     }
 
-    async generateUtxoOwnershipProve(utxoTransaction: UtxoTransaction) {
+    async generateUtxoOwnershipProve(utxoTransaction: UtxoTransaction): Promise<void> {
         await this.utxoUseCases.writeUtxoOwnership(utxoTransaction);
     }
 
-    async generateUtxoInputsProve(utxoTransaction: UtxoTransaction) {
+    async generateUtxoInputsProve(utxoTransaction: UtxoTransaction): Promise<void> {
         await this.utxoUseCases.writeUtxoInputs(this.utxoGraph.merkleTree, utxoTransaction);
     }
 
-    async generateUtxoOutputsProve(utxoTransaction: UtxoTransaction) {
+    async generateUtxoOutputsProve(utxoTransaction: UtxoTransaction): Promise<void> {
         await this.utxoUseCases.writeUtxoOutputs(this.utxoGraph.merkleTree, utxoTransaction);
     }
 

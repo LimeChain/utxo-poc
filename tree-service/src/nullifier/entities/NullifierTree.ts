@@ -6,7 +6,29 @@ export class NullifierTree {
     merkleTree: MerkleTree<NullifierNode> = new MerkleTree();
 
     constructor() {
-        this.merkleTree.appendLeaf(new NullifierNode());
+        this.merkleTree.appendLeaf(NullifierNode.newInstance(Buffer.alloc(32)));
+    }
+
+    getLowNullifierIndex(nullifierNode: NullifierNode): number {
+        const leaves = this.merkleTree.leaves;
+
+        let lowNullifierIndex = 0;
+        for (; ;) {
+            const node = leaves[lowNullifierIndex];
+            if (node.nextIndex === 0 || node.nextValue > nullifierNode.value) {
+                break;
+            }
+
+            lowNullifierIndex = node.nextIndex;
+        }
+
+        return lowNullifierIndex;
+    }
+
+    getLowNullifier(nullifierNode: NullifierNode): NullifierNode {
+        const leaves = this.merkleTree.leaves;
+        const lowNullifierIndex = this.getLowNullifierIndex(nullifierNode);
+        return leaves[lowNullifierIndex];
     }
 
     appendNullifierNode(nullifierNode: NullifierNode) {
@@ -16,18 +38,8 @@ export class NullifierTree {
 
     updateLinks(nullifierNode: NullifierNode, index: number) {
         const leaves = this.merkleTree.leaves;
-
-        let insertAfterIndex = 0;
-        for (; ;) {
-            const node = leaves[insertAfterIndex];
-            if (node.nextIndex === 0 || node.nextValue > nullifierNode.value) {
-                break;
-            }
-
-            insertAfterIndex = node.nextIndex;
-        }
-
-        const previousNode = leaves[insertAfterIndex];
+        const lowNullifierIndex = this.getLowNullifierIndex(nullifierNode);
+        const previousNode = leaves[lowNullifierIndex];
         nullifierNode.nextValue = previousNode.nextValue;
         nullifierNode.nextIndex = previousNode.nextIndex;
 

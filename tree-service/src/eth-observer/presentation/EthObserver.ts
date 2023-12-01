@@ -28,12 +28,11 @@ export default class EthObserver {
     run = async () => {
         const rawTransactions = await this.validiumSmartContractStore.fetchRawTransactions();
 
+        this.publicKeysStore.updatePubKeys(rawTransactions);
         for (let i = 0; i < rawTransactions.length; ++i) {
             const rawTransaction = rawTransactions[i];
-            this.publicKeysStore.updatePubKeys([rawTransaction]);
-            const utxoTransactions = await this.utxoStore.update([rawTransaction]);
-            this.nullifierStore.update(utxoTransactions);
 
+            const utxoTransactions = await this.utxoStore.update([rawTransaction]);
             for (let j = 0; j < utxoTransactions.length; ++j) {
                 const utxoTransaction = utxoTransactions[j];
                 if (utxoTransaction.isSupportedByCircuits() === false) {
@@ -44,8 +43,10 @@ export default class EthObserver {
                 await this.utxoStore.generateUtxoOwnershipProve(utxoTransaction);
                 await this.utxoStore.generateUtxoOutputsProve(utxoTransaction);
                 await this.utxoStore.generateUtxoInputsProve(utxoTransaction);
-                process.exit(0); // process a single transfer tx for now
+                await this.nullifierStore.generateLowNullifierProve(utxoTransaction);
             }
+
+            this.nullifierStore.update(utxoTransactions);
         }
 
         // if (rawTransactions.length !== 0) {
