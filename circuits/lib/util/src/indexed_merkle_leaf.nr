@@ -1,11 +1,12 @@
 use dep::std;
 use crate::utxo::UTXO;
 
-global INDEXED_MERKLE_LEAF_SIZE = 252; // 2 * OUTPUT_SIZE + 4 (nextIdx)
+global INDEXED_MERKLE_LEAF_SIZE = 68; // 2 * OUTPUT_SIZE + 4 (nextIdx)
+
 
 struct IndexedMerkleLeaf {
-    val: UTXO,
-    nextVal: UTXO,
+    val: [u8; 32], // hash of current UTXO
+    nextVal: [u8; 32], // hash of next UTXO
     nextIdx: u32,
 }
 
@@ -17,48 +18,12 @@ impl IndexedMerkleLeaf {
         let mut index = 0;
 
         for j in 0..32 {
-            arr[index] = self.val.value[j];
-            index += 1;
-        }
-        for j in 0..32 {
-            arr[index] = self.val.spender_pub_key_x[j];
-            index += 1;
-        }
-        for j in 0..32 {
-            arr[index] = self.val.spender_pub_key_y[j];
-            index += 1;
-        }
-        for j in 0..20 {
-            arr[index] = self.val.erc20_address[j];
-            index += 1;
-        }
-
-        for bit_pos in 0..8 {
-            let shift_amount: u64 = 56 - (bit_pos * 8) as u64;
-            arr[index] = ((self.val.nonce >> shift_amount) & 255) as u8;
+            arr[index] = self.val[j];
             index += 1;
         }
 
         for j in 0..32 {
-            arr[index] = self.nextVal.value[j];
-            index += 1;
-        }
-        for j in 0..32 {
-            arr[index] = self.nextVal.spender_pub_key_x[j];
-            index += 1;
-        }
-        for j in 0..32 {
-            arr[index] = self.nextVal.spender_pub_key_y[j];
-            index += 1;
-        }
-        for j in 0..20 {
-            arr[index] = self.nextVal.erc20_address[j];
-            index += 1;
-        }
-
-        for bit_pos in 0..8 {
-            let shift_amount: u64 = 56 - (bit_pos * 8) as u64;
-            arr[index] = ((self.nextVal.nonce >> shift_amount) & 255) as u8;
+            arr[index] = self.nextVal[j];
             index += 1;
         }
 

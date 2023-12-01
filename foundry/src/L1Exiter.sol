@@ -53,11 +53,7 @@ contract L1Exiter is Ownable, ReentrancyGuard {
 
     //NOTE: we optimistically trust that the account-based model state roots are correct.
     //submits proof that
-    function submitProof(bytes calldata _proof, bytes32 _nullifierRoot, bytes32 _utxoRoot) external onlyOwner {
-        bytes32[] memory publicInputs = new bytes32[](2);
-        publicInputs[0] = _nullifierRoot;
-        publicInputs[1] = _utxoRoot;
-        
+    function submitProof(bytes calldata _proof, bytes32 _utxoRoot, bytes32 _nullifierRoot, bytes32[16] memory publicInputs) external onlyOwner {
 
         require(verifier.verify(_proof, publicInputs), "invalid proof");
 
