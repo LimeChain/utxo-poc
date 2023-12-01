@@ -18,26 +18,21 @@ export default class UtxoStore {
         this.utxoGraph = new UtxoGraph(this.publicKeysStore.getPublicKeyX, this.publicKeysStore.getPublicKeyY);
     }
 
-    async update(rawTransactions: RawTransaction[]): Promise<UtxoTransaction[]> {
-        const utxoTransactions: UtxoTransaction[] = [];
+    async update(rawTransaction: RawTransaction): Promise<UtxoTransaction> {
+        const utxoTransaction = this.utxoGraph.processRawTransation(rawTransaction);
+        if (utxoTransaction === null) {
+            console.error('Error processing', rawTransaction);
+            process.exit(1);
+        }
 
-        rawTransactions.forEach((rawTransaction) => {
-            const utxoTransaction = this.utxoGraph.processRawTransation(rawTransaction);
-            if (utxoTransaction === null) {
-                console.error('Error processing', rawTransaction);
-                process.exit(1);
-            }
-
-            utxoTransactions.push(utxoTransaction);
-            // console.log('rootHash', this.utxoGraph.merkleTree.getRootHash());
-        });
+        // console.log('rootHash', this.utxoGraph.merkleTree.getRootHash());
 
         // console.log("UTXO GRAPH ============================================");
         // console.log(this.utxoGraph.merkleTree);
         // console.log("ACCOUNT BALANCES ============================================");
         // this.utxoGraph.printAccountBalances();
 
-        return utxoTransactions;
+        return utxoTransaction;
     }
 
     async generateUtxoSignatureProve(utxoTransaction: UtxoTransaction): Promise<void> {

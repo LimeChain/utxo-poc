@@ -1,19 +1,19 @@
 import NullifierNode from '../../entities/NullifierNode';
 
-export default class LowNullifier {
+export default class NoirNullifierNode {
 
     nextIdx: number = 0;
     nextVal: number[] = [];
     val: number[] = [];
 
     static fromNullifierNode(nullifierNode: NullifierNode) {
-        const lowNullifier = new LowNullifier();
+        const dto = new NoirNullifierNode();
 
-        lowNullifier.nextIdx = nullifierNode.nextIndex;
-        lowNullifier.nextVal = Array.from(nullifierNode.getNextValueAsUint8Array());
-        lowNullifier.val = Array.from(nullifierNode.getValueAsUint8Array());
+        dto.nextIdx = nullifierNode.nextIndex;
+        dto.nextVal = Array.from(nullifierNode.getNextValueAsUint8Array());
+        dto.val = Array.from(nullifierNode.getValueAsUint8Array());
 
-        return lowNullifier;
+        return dto;
     }
 
     toToml(path: string): string {

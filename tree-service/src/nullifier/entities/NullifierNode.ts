@@ -13,7 +13,7 @@ export default class NullifierNode extends MerkleTreeNode {
         node.value = utxoNodeHash.toString('hex');
         node.nextIndex = 0;
         node.nextValue = Buffer.alloc(32).toString('hex');
-        node.hash = node.createHash();
+        node.hash = utxoNodeHash;
 
         return node;
     }

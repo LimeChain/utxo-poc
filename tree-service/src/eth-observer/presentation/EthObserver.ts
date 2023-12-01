@@ -32,43 +32,21 @@ export default class EthObserver {
         for (let i = 0; i < rawTransactions.length; ++i) {
             const rawTransaction = rawTransactions[i];
 
-            const utxoTransactions = await this.utxoStore.update([rawTransaction]);
-            for (let j = 0; j < utxoTransactions.length; ++j) {
-                const utxoTransaction = utxoTransactions[j];
-                if (utxoTransaction.isSupportedByCircuits() === false) {
-                    continue;
-                }
-
-                await this.utxoStore.generateUtxoSignatureProve(utxoTransaction);
-                await this.utxoStore.generateUtxoOwnershipProve(utxoTransaction);
-                await this.utxoStore.generateUtxoOutputsProve(utxoTransaction);
-                await this.utxoStore.generateUtxoInputsProve(utxoTransaction);
-                await this.nullifierStore.generateLowNullifierProve(utxoTransaction);
-                console.log(Array.from(this.utxoStore.utxoGraph.merkleTree.getRootHashAsUint8Array()));
-                console.log(Array.from(this.nullifierStore.nullifierTree.merkleTree.getRootHashAsUint8Array()));
+            const utxoTransaction = await this.utxoStore.update(rawTransaction);
+            if (utxoTransaction.isSupportedByCircuits() === false) {
+                continue;
             }
 
-            this.nullifierStore.update(utxoTransactions);
+            await this.utxoStore.generateUtxoSignatureProve(utxoTransaction);
+            await this.utxoStore.generateUtxoOwnershipProve(utxoTransaction);
+            await this.utxoStore.generateUtxoOutputsProve(utxoTransaction);
+            await this.utxoStore.generateUtxoInputsProve(utxoTransaction);
+            await this.nullifierStore.generateLowNullifierProve(utxoTransaction);
+            console.log(Array.from(this.utxoStore.utxoGraph.merkleTree.getRootHashAsUint8Array()));
+            console.log(Array.from(this.nullifierStore.nullifierTree.merkleTree.getRootHashAsUint8Array()));
+
+            this.nullifierStore.update(utxoTransaction);
         }
-
-        // if (rawTransactions.length !== 0) {
-        //     this.publicKeysStore.updatePubKeys(rawTransactions);
-        //     const utxoTransactions = await this.utxoStore.update(rawTransactions);
-        //     this.nullifierStore.update(utxoTransactions);
-
-        //     for (let i = 0; i < utxoTransactions.length; ++i) {
-        //         const utxoTransaction = utxoTransactions[i];
-        //         if (utxoTransaction.isSupportedByCircuits() === false) {
-        //             continue;
-        //         }
-
-        //         await this.utxoStore.generateUtxoSignatureProve(utxoTransaction);
-        //         await this.utxoStore.generateUtxoOwnershipProve(utxoTransaction);
-        //         await this.utxoStore.generateUtxoOutputsProve(utxoTransaction);
-        //         await this.utxoStore.generateUtxoInputsProve(utxoTransaction);
-        //         break;
-        //     }
-        // }
 
         setTimeout(this.run, parseInt(process.env.VALIDIUM_PULL_INTERVAL ?? "15000"));
     }

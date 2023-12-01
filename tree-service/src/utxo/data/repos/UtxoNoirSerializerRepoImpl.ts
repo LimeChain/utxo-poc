@@ -2,21 +2,21 @@ import Fs from 'fs';
 import Path from 'path';
 
 import UtxoTransaction from '../../entities/UtxoTransaction';
-import NoirSerializerRepo from '../../use-cases/repos/NoirSerializerRepo';
-import SignedTransaction from '../dto/SignedTransaction';
-import MerkleTreePath from '../dto/MerkleTreePath';
+import UtxoNoirSerializerRepo from '../../use-cases/repos/UtxoNoirSerializerRepo';
+import NoirSignedTransaction from '../dto/NoirSignedTransaction';
 import MerkleTree from '../../../merkle-tree/entities/MerkleTree';
 import MerkleTreeNode from '../../../merkle-tree/entities/MerkleTreeNode';
+import NoirMerkleTreePath from '../../../merkle-tree/data/dto/NoirMerkleTreePath';
 
-export default class NoirSerializerRepoImpl implements NoirSerializerRepo {
+export default class UtxoNoirSerializerRepoImpl implements UtxoNoirSerializerRepo {
 
     async writeUtxoSignature(utxoTransaction: UtxoTransaction): Promise<void> {
-        const signedTransaction = SignedTransaction.fromUtxoTransaction(utxoTransaction);
+        const noirSignedTransaction = NoirSignedTransaction.fromUtxoTransaction(utxoTransaction);
 
         return new Promise((resolve, reject) => {
             const storagePath = Path.join(__dirname, '../../../../../circuits/crates/utxo-signature/Prover.toml');
 
-            Fs.writeFile(storagePath, signedTransaction.toToml('signed_transaction'), (err) => {
+            Fs.writeFile(storagePath, noirSignedTransaction.toToml('signed_transaction'), (err) => {
                 if (err) {
                     reject(err);
                     return;
@@ -28,12 +28,12 @@ export default class NoirSerializerRepoImpl implements NoirSerializerRepo {
     }
 
     async writeUtxoOwnership(utxoTransaction: UtxoTransaction): Promise<void> {
-        const signedTransaction = SignedTransaction.fromUtxoTransaction(utxoTransaction);
+        const noirSignedTransaction = NoirSignedTransaction.fromUtxoTransaction(utxoTransaction);
 
         return new Promise((resolve, reject) => {
             const storagePath = Path.join(__dirname, '../../../../../circuits/crates/utxo-ownership/Prover.toml');
 
-            Fs.writeFile(storagePath, signedTransaction.toToml('signed_transaction'), (err) => {
+            Fs.writeFile(storagePath, noirSignedTransaction.toToml('signed_transaction'), (err) => {
                 if (err) {
                     reject(err);
                     return;
@@ -43,17 +43,18 @@ export default class NoirSerializerRepoImpl implements NoirSerializerRepo {
             });
         });
     }
+
     async writeUtxoInputs(merkleTree: MerkleTree<MerkleTreeNode>, utxoTransaction: UtxoTransaction): Promise<void> {
-        const signedTransaction = SignedTransaction.fromUtxoTransaction(utxoTransaction);
-        const merkleTreePath = MerkleTreePath.fromMerkleTreeData(merkleTree, utxoTransaction.inputs);
+        const noirSignedTransaction = NoirSignedTransaction.fromUtxoTransaction(utxoTransaction);
+        const noirMerkleTreePath = NoirMerkleTreePath.fromMerkleTreeData(merkleTree, utxoTransaction.inputs);
 
         return new Promise((resolve, reject) => {
             const storagePath = Path.join(__dirname, '../../../../../circuits/crates/utxo-inputs/Prover.toml');
 
             const buffer = [
-                merkleTreePath.toToml(),
+                noirMerkleTreePath.toToml(),
                 '\n',
-                signedTransaction.toToml('signed_transaction')
+                noirSignedTransaction.toToml('signed_transaction')
             ]
 
             Fs.writeFile(storagePath, buffer.join('\n'), (err) => {
@@ -66,15 +67,16 @@ export default class NoirSerializerRepoImpl implements NoirSerializerRepo {
             });
         });
     }
+
     async writeUtxoOutputs(merkleTree: MerkleTree<MerkleTreeNode>, utxoTransaction: UtxoTransaction): Promise<void> {
-        const signedTransaction = SignedTransaction.fromUtxoTransaction(utxoTransaction);
-        const merkleTreePath = MerkleTreePath.fromMerkleTreeData(merkleTree, utxoTransaction.outputs);
+        const signedTransaction = NoirSignedTransaction.fromUtxoTransaction(utxoTransaction);
+        const noirMerkleTreePath = NoirMerkleTreePath.fromMerkleTreeData(merkleTree, utxoTransaction.outputs);
 
         return new Promise((resolve, reject) => {
             const storagePath = Path.join(__dirname, '../../../../../circuits/crates/utxo-outputs/Prover.toml');
 
             const buffer = [
-                merkleTreePath.toToml(),
+                noirMerkleTreePath.toToml(),
                 '\n',
                 signedTransaction.toToml('signed_transaction')
             ]

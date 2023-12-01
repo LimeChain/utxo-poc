@@ -1,7 +1,7 @@
 import NullifierNode from './NullifierNode';
 import MerkleTree from '../../merkle-tree/entities/MerkleTree';
 
-export class NullifierTree {
+export default class NullifierTree {
 
     merkleTree: MerkleTree<NullifierNode> = new MerkleTree();
 

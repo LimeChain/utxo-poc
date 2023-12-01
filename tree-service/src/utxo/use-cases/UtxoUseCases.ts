@@ -1,30 +1,30 @@
 import MerkleTree from '../../merkle-tree/entities/MerkleTree';
 import MerkleTreeNode from '../../merkle-tree/entities/MerkleTreeNode';
 import UtxoTransaction from '../entities/UtxoTransaction';
-import NoirSerializerRepo from './repos/NoirSerializerRepo';
+import UtxoNoirSerializerRepo from './repos/UtxoNoirSerializerRepo';
 
 export default class UtxoUseCases {
 
-    noirSerializerRepo: NoirSerializerRepo;
+    utxoNoirSerializerRepo: UtxoNoirSerializerRepo;
 
-    constructor(noirSerializerRepo: NoirSerializerRepo) {
-        this.noirSerializerRepo = noirSerializerRepo;
+    constructor(utxoNoirSerializerRepo: UtxoNoirSerializerRepo) {
+        this.utxoNoirSerializerRepo = utxoNoirSerializerRepo;
     }
 
     writeUtxoSignature(utxoTransaction: UtxoTransaction): Promise<void> {
-        return this.noirSerializerRepo.writeUtxoSignature(utxoTransaction);
+        return this.utxoNoirSerializerRepo.writeUtxoSignature(utxoTransaction);
     }
 
     writeUtxoOwnership(utxoTransaction: UtxoTransaction): Promise<void> {
-        return this.noirSerializerRepo.writeUtxoOwnership(utxoTransaction);
+        return this.utxoNoirSerializerRepo.writeUtxoOwnership(utxoTransaction);
     }
 
     writeUtxoInputs(merkleTree: MerkleTree<MerkleTreeNode>, utxoTransaction: UtxoTransaction): Promise<void> {
-        return this.noirSerializerRepo.writeUtxoInputs(merkleTree, utxoTransaction);
+        return this.utxoNoirSerializerRepo.writeUtxoInputs(merkleTree, utxoTransaction);
     }
 
     writeUtxoOutputs(merkleTree: MerkleTree<MerkleTreeNode>, utxoTransaction: UtxoTransaction): Promise<void> {
-        return this.noirSerializerRepo.writeUtxoOutputs(merkleTree, utxoTransaction);
+        return this.utxoNoirSerializerRepo.writeUtxoOutputs(merkleTree, utxoTransaction);
     }
 
 

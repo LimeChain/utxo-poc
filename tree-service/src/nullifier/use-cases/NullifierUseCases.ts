@@ -1,17 +1,19 @@
+import MerkleTree from '../../merkle-tree/entities/MerkleTree';
+import MerkleTreeNode from '../../merkle-tree/entities/MerkleTreeNode';
 import UtxoTransaction from '../../utxo/entities/UtxoTransaction';
-import { NullifierTree } from '../entities/NullifierTree';
-import NoirSerialializerRepo from './repos/NoirSerialializerRepo';
+import NullifierNode from '../entities/NullifierNode';
+import NullifierNoirSerializerRepo from './repos/NullifierNoirSerializerRepo';
 
 export default class NullifierUseCases {
 
-    noirSerialializerRepo: NoirSerialializerRepo;
+    nullifierNoirSerializerRepo: NullifierNoirSerializerRepo;
 
-    constructor(noirSerialializerRepo: NoirSerialializerRepo) {
-        this.noirSerialializerRepo = noirSerialializerRepo;
+    constructor(nullifierNoirSerializerRepo: NullifierNoirSerializerRepo) {
+        this.nullifierNoirSerializerRepo = nullifierNoirSerializerRepo;
     }
 
-    writeLowNullifier(nullifierTree: NullifierTree, utxoTransaction: UtxoTransaction): Promise<void> {
-        return this.noirSerialializerRepo.writeLowNullifier(nullifierTree, utxoTransaction);
+    writeLowNullifier(merkleTree: MerkleTree<MerkleTreeNode>, lowNullifierNode: NullifierNode, utxoTransaction: UtxoTransaction): Promise<void> {
+        return this.nullifierNoirSerializerRepo.writeLowNullifier(merkleTree, lowNullifierNode, utxoTransaction);
     }
 
 }

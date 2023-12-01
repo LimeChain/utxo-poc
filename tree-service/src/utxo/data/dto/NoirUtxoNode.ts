@@ -1,6 +1,6 @@
 import UtxoNode from '../../entities/UtxoNode';
 
-export default class Output {
+export default class NoirUtxo {
 
     erc20_address: number[] = [];
     spender_pub_key_x: number[] = [];
@@ -8,8 +8,8 @@ export default class Output {
     value: number[] = [];
     nonce: number = -1;
 
-    static fromUtxoNode(utxoNode: UtxoNode): Output {
-        const dto = new Output();
+    static fromUtxoNode(utxoNode: UtxoNode): NoirUtxo {
+        const dto = new NoirUtxo();
 
         dto.erc20_address = Array.from(utxoNode.getErc20AddrAsUint8Array());
         dto.spender_pub_key_x = Array.from(utxoNode.getPubKeyXAsUint8Array());

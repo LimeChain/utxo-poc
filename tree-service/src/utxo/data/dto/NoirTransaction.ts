@@ -1,18 +1,18 @@
 import UtxoNode from '../../entities/UtxoNode';
-import Output from './Output';
+import NoirUtxoNode from './NoirUtxoNode';
 
-export default class Transaction {
+export default class NoirTransaction {
 
-    inputs: Output = new Output();
-    outputs: Output[] = [];
+    inputs: NoirUtxoNode = new NoirUtxoNode();
+    outputs: NoirUtxoNode[] = [];
 
-    static fromUtxoNodes(input: UtxoNode, outputs: UtxoNode[]): Transaction {
-        const transaction = new Transaction();
+    static fromUtxoNodes(input: UtxoNode, outputs: UtxoNode[]): NoirTransaction {
+        const dto = new NoirTransaction();
 
-        transaction.inputs = Output.fromUtxoNode(input);
-        transaction.outputs = outputs.map((output) => Output.fromUtxoNode(output));
+        dto.inputs = NoirUtxoNode.fromUtxoNode(input);
+        dto.outputs = outputs.map((output) => NoirUtxoNode.fromUtxoNode(output));
 
-        return transaction;
+        return dto;
     }
 
     toToml(path: string): string {

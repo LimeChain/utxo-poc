@@ -7,8 +7,8 @@ import EthObserverUseCases from '../../../eth-observer/use-cases/EthObserverUseC
 import { ValidiumSmartContractUseCases } from '../../../eth-observer/use-cases/ValidiumSmartContractUseCases';
 import NullifierStore from '../../../nullifier/presentation/state/NullifierStore';
 import NullifierUseCases from '../../../nullifier/use-cases/NullifierUseCases';
-import NoirSerializerRepoImpl from '../../../utxo/data/repos/NoirSerializerRepoImpl';
-import NoirSerializerRepoImpl2 from '../../../nullifier/data/repos/NoirSerializerRepoImpl';
+import UtxoNoirSerializerRepoImpl from '../../../utxo/data/repos/UtxoNoirSerializerRepoImpl';
+import NullifierNoirSerializerRepoImpl from '../../../nullifier/data/repos/NullifierNoirSerializerRepoImpl';
 import UtxoStore from '../../../utxo/presentation/state/UtxoStore';
 import UtxoUseCases from '../../../utxo/use-cases/UtxoUseCases';
 
@@ -23,13 +23,13 @@ class Injector {
     async init() {
         const ethObserverRepo = new EthObserverRepoImpl();
         const validiumSmartContractRepo = new ValidiumSmartContractRepoImpl();
-        const noirSerializerRepo = new NoirSerializerRepoImpl();
-        const noirSerializerRepo2 = new NoirSerializerRepoImpl2();
+        const utxoNoirSerializerRepo = new UtxoNoirSerializerRepoImpl();
+        const nullifierNoirSerializerRepoImpl = new NullifierNoirSerializerRepoImpl();
 
         const ethObserverUseCases = new EthObserverUseCases(ethObserverRepo);
         const validiumSmartContractUseCases = new ValidiumSmartContractUseCases(validiumSmartContractRepo);
-        const utxoUseCases = new UtxoUseCases(noirSerializerRepo);
-        const nullifierUseCases = new NullifierUseCases(noirSerializerRepo2)
+        const utxoUseCases = new UtxoUseCases(utxoNoirSerializerRepo);
+        const nullifierUseCases = new NullifierUseCases(nullifierNoirSerializerRepoImpl)
 
         this.publicKeysStore = new PublicKeysStore();
         this.ethObserverStore = new EthObserverStore(ethObserverUseCases);

@@ -1,24 +1,24 @@
 import UtxoTransaction from '../../entities/UtxoTransaction';
-import Transaction from './Transaction';
+import NoirTransaction from './NoirTransaction';
 
-export default class SignedTransaction {
+export default class NoirSignedTransaction {
 
     pub_key_x: number[] = [];
     pub_key_y: number[] = [];
     signature: number[] = [];
     tx_hash: number[] = [];
-    transaction: Transaction = new Transaction();
+    transaction: NoirTransaction = new NoirTransaction();
 
     static fromUtxoTransaction(utxoTransaction: UtxoTransaction) {
-        const signedTransaction = new SignedTransaction();
+        const dto = new NoirSignedTransaction();
 
-        signedTransaction.pub_key_x = Array.from(utxoTransaction.getPubKeyXAsUint8Array());
-        signedTransaction.pub_key_y = Array.from(utxoTransaction.getPubKeyYAsUint8Array());
-        signedTransaction.signature = Array.from(utxoTransaction.getSignatureAsUint8Array());
-        signedTransaction.tx_hash = Array.from(utxoTransaction.getUnsignedTxHashAsUint8Array());
-        signedTransaction.transaction = Transaction.fromUtxoNodes(utxoTransaction.inputs[0], utxoTransaction.outputs);
+        dto.pub_key_x = Array.from(utxoTransaction.getPubKeyXAsUint8Array());
+        dto.pub_key_y = Array.from(utxoTransaction.getPubKeyYAsUint8Array());
+        dto.signature = Array.from(utxoTransaction.getSignatureAsUint8Array());
+        dto.tx_hash = Array.from(utxoTransaction.getUnsignedTxHashAsUint8Array());
+        dto.transaction = NoirTransaction.fromUtxoNodes(utxoTransaction.inputs[0], utxoTransaction.outputs);
 
-        return signedTransaction;
+        return dto;
     }
 
     toToml(path: string): string {
