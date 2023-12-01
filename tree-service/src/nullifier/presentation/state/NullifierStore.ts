@@ -24,8 +24,8 @@ export default class NullifierStore {
             });
         }
 
-        console.log("NULLIFIER TREE ============================================");
-        console.log(this.nullifierTree);
+        // console.log("NULLIFIER TREE ============================================");
+        // console.log(this.nullifierTree);
     }
 
     async generateLowNullifierProve(utxoTransaction: UtxoTransaction): Promise<void> {

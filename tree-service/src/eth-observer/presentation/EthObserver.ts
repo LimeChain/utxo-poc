@@ -44,6 +44,8 @@ export default class EthObserver {
                 await this.utxoStore.generateUtxoOutputsProve(utxoTransaction);
                 await this.utxoStore.generateUtxoInputsProve(utxoTransaction);
                 await this.nullifierStore.generateLowNullifierProve(utxoTransaction);
+                console.log(Array.from(this.utxoStore.utxoGraph.merkleTree.getRootHashAsUint8Array()));
+                console.log(Array.from(this.nullifierStore.nullifierTree.merkleTree.getRootHashAsUint8Array()));
             }
 
             this.nullifierStore.update(utxoTransactions);
