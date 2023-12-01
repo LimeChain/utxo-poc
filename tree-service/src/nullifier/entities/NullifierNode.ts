@@ -1,25 +1,25 @@
-import HashUtils from '../../core/utilities/HashUtils';
+import BigIntUtils from '../../core/utilities/BigIntUtils';
 import MerkleTreeNode from '../../merkle-tree/entities/MerkleTreeNode';
 
 export default class NullifierNode extends MerkleTreeNode {
 
-    value: string = '';
+    value: bigint = 0n;
     nextIndex: number = 0;
-    nextValue: string = '';
+    nextValue: bigint = 0n;
 
     static newInstance(utxoNodeHash: Buffer) {
         const node = new NullifierNode();
 
-        node.value = utxoNodeHash.toString('hex');
+        node.value = BigInt(`0x${utxoNodeHash.toString('hex')}`);
         node.nextIndex = 0;
-        node.nextValue = Buffer.alloc(32).toString('hex');
+        node.nextValue = 0n;
         node.hash = utxoNodeHash;
 
         return node;
     }
 
     getValueAsUint8Array(): Uint8Array {
-        return Uint8Array.from(Buffer.from(this.value, 'hex'));
+        return BigIntUtils.convertBigIntToUint8Array(this.value);
     }
 
     getNextIndexAsUint8Array(): Uint8Array {
@@ -34,15 +34,7 @@ export default class NullifierNode extends MerkleTreeNode {
     }
 
     getNextValueAsUint8Array(): Uint8Array {
-        return Uint8Array.from(Buffer.from(this.nextValue, 'hex'));
-    }
-
-    createHash(): Buffer {
-        return HashUtils.createHash(Buffer.concat([
-            Buffer.from(this.getValueAsUint8Array()),
-            // Buffer.from(this.getNextValueAsUint8Array()),
-            // Buffer.from(this.getNextIndexAsUint8Array()),
-        ]))
+        return BigIntUtils.convertBigIntToUint8Array(this.nextValue);
     }
 
 }

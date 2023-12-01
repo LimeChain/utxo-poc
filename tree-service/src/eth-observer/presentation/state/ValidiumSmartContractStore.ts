@@ -16,14 +16,6 @@ export class ValidiumSmartContractStore {
         this.lastCheckedEthBlockNumber = parseInt(process.env.ETH_BLOCK_START ?? "0");
     }
 
-    // async fetchEvents(): Promise<ParsedEvent[]> {
-    //     const ethBlockHeight = await this.ethObserverStore.fetchBlockNumber();
-    //     const parseEvents = await this.validiumSmartContractUseCases.fetchEvents(this.lastCheckedEthBlockNumber + 1, ethBlockHeight);
-    //     this.lastCheckedEthBlockNumber = ethBlockHeight;
-
-    //     return parseEvents;
-    // }
-
     async fetchRawTransactions(): Promise<RawTransaction[]> {
         const ethBlockHeight = await this.ethObserverStore.fetchBlockNumber();
         if (ethBlockHeight === this.lastCheckedEthBlockNumber) {
@@ -34,6 +26,10 @@ export class ValidiumSmartContractStore {
         this.lastCheckedEthBlockNumber = ethBlockHeight;
 
         return rawTransactions;
+    }
+
+    async prove(): Promise<void> {
+        await this.validiumSmartContractUseCases.prove();
     }
 
 }

@@ -1,3 +1,4 @@
+import BigIntUtils from '../../core/utilities/BigIntUtils';
 import HashUtils from '../../core/utilities/HashUtils';
 import MerkleTreeNode from '../../merkle-tree/entities/MerkleTreeNode';
 
@@ -33,12 +34,7 @@ export default class UtxoNode extends MerkleTreeNode {
     }
 
     getValueAsUint8Array(): Uint8Array {
-        const valueBufferArray = new Uint8Array(32);
-        for (let convertedValue = this.value, i = valueBufferArray.length - 1; convertedValue > 0n; convertedValue >>= 8n, --i) {
-            valueBufferArray[i] = Number(convertedValue & 0xFFn);
-        }
-
-        return valueBufferArray;
+        return BigIntUtils.convertBigIntToUint8Array(this.value);
     }
 
     getPubKeyXAsUint8Array(): Uint8Array {

@@ -64,13 +64,13 @@ impl<N,M> Transaction<N,M> {
 
             // we are casting hash to number and checking hash values. 
             // The low_nullifier tree must be indexed and sorted for this to work
-            let low_nullifier_value = BigUint56::from_bytes_32(low_nullifier_leaf[i].val);
-            let new_nullifier_value = BigUint56::from_bytes_32(self.inputs[i].to_bytes_32());
+            let low_nullifier_value = BigUint56::from_bytes_32_big_endian_number(low_nullifier_leaf[i].val);
+            let new_nullifier_value = BigUint56::from_bytes_32_big_endian_number(self.inputs[i].to_bytes_32());
             if(low_nullifier_leaf[i].nextIdx == 0) {
                 //Special case, the low leaf is at the very end, so the new_value must be higher than all values in the tree
                 assert(low_nullifier_value.lt(new_nullifier_value));
             } else {
-                let low_nullifier_next_value = BigUint56::from_bytes_32(low_nullifier_leaf[i].nextVal);
+                let low_nullifier_next_value = BigUint56::from_bytes_32_big_endian_number(low_nullifier_leaf[i].nextVal);
                 assert(low_nullifier_next_value.gt(new_nullifier_value));
                 assert(low_nullifier_value.lt(new_nullifier_value));
             }

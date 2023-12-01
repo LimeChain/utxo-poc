@@ -11,6 +11,9 @@ import UtxoNoirSerializerRepoImpl from '../../../utxo/data/repos/UtxoNoirSeriali
 import NullifierNoirSerializerRepoImpl from '../../../nullifier/data/repos/NullifierNoirSerializerRepoImpl';
 import UtxoStore from '../../../utxo/presentation/state/UtxoStore';
 import UtxoUseCases from '../../../utxo/use-cases/UtxoUseCases';
+import ShellRepoImpl from '../../../shell/data/repos/ShellRepoImpl';
+import ShellUseCases from '../../../shell/use-cases/ShellUseCases';
+import ShellStore from '../../../shell/presentation/state/ShellStore';
 
 class Injector {
 
@@ -19,23 +22,27 @@ class Injector {
     validiumSmartContractStore: ValidiumSmartContractStore | null = null;
     utxoStore: UtxoStore | null = null;
     nullifierStore: NullifierStore | null = null;
+    shellStore: ShellStore | null = null;
 
     async init() {
         const ethObserverRepo = new EthObserverRepoImpl();
         const validiumSmartContractRepo = new ValidiumSmartContractRepoImpl();
         const utxoNoirSerializerRepo = new UtxoNoirSerializerRepoImpl();
-        const nullifierNoirSerializerRepoImpl = new NullifierNoirSerializerRepoImpl();
+        const nullifierNoirSerializerRepo = new NullifierNoirSerializerRepoImpl();
+        const shellRepo = new ShellRepoImpl();
 
         const ethObserverUseCases = new EthObserverUseCases(ethObserverRepo);
         const validiumSmartContractUseCases = new ValidiumSmartContractUseCases(validiumSmartContractRepo);
         const utxoUseCases = new UtxoUseCases(utxoNoirSerializerRepo);
-        const nullifierUseCases = new NullifierUseCases(nullifierNoirSerializerRepoImpl)
+        const nullifierUseCases = new NullifierUseCases(nullifierNoirSerializerRepo)
+        const shellUseCases = new ShellUseCases(shellRepo);
 
         this.publicKeysStore = new PublicKeysStore();
         this.ethObserverStore = new EthObserverStore(ethObserverUseCases);
         this.validiumSmartContractStore = new ValidiumSmartContractStore(this.getEthObserverStore(), validiumSmartContractUseCases);
         this.utxoStore = new UtxoStore(this.getPublicKeysStore(), utxoUseCases);
         this.nullifierStore = new NullifierStore(nullifierUseCases);
+        this.shellStore = new ShellStore(shellUseCases);
     }
 
     getPublicKeysStore(): PublicKeysStore {
@@ -56,6 +63,10 @@ class Injector {
 
     getNullifierStore(): NullifierStore {
         return this.nullifierStore as NullifierStore;
+    }
+
+    getShellStore(): ShellStore {
+        return this.shellStore as ShellStore;
     }
 
 }

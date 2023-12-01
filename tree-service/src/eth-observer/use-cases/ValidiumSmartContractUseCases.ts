@@ -13,4 +13,8 @@ export class ValidiumSmartContractUseCases {
         return this.validiumSmartContractRepo.fetchRawTransactions(fromHeight, toHeight);
     }
 
+    prove(): Promise<void> {
+        return this.validiumSmartContractRepo.prove();
+    }
+
 }

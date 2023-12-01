@@ -10,5 +10,6 @@
         "hookyqr.beautify",
         "dbaeumer.vscode-eslint",
         "albymor.increment-selection",
+        "noir-lang.vscode-noir",
     ],
 }

@@ -1,11 +1,11 @@
 
 // Top-level constants related to the size of BigUint56 limbs and bytes.
 global BITS_PER_LIMB: Field = 56; /// Number of bits per limb.
-global NUM_LIMBS: Field = 5;      /// Number of limbs.
+global NUM_LIMBS: Field = 5; /// Number of limbs.
 
 global BYTES_PER_LIMB: Field = 7; /// Number of bytes per limb (BITS_PER_LIMB / 8).
-global MAX_BITS: Field = 280;     /// Maximum number of bits (BITS_PER_LIMB * NUM_LIMBS).
-global MAX_BYTES: Field = 35;     /// Maximum number of bytes (NUM_LIMBS * BYTES_PER_LIMB).
+global MAX_BITS: Field = 280; /// Maximum number of bits (BITS_PER_LIMB * NUM_LIMBS).
+global MAX_BYTES: Field = 35; /// Maximum number of bytes (NUM_LIMBS * BYTES_PER_LIMB).
 
 // TODO/NOTES:
 // 1. Noir doesn't support expressions on globals so these are hardcoded
@@ -36,6 +36,20 @@ impl BigUint56 {
         let mut one = BigUint56::zero();
         one.limbs[0] = 1;
         one
+    }
+
+    /// Constructs a BigUint56 from a byte array in little-endian format.
+    pub fn from_bytes_32_big_endian_number(bytes: [u8; 32]) -> Self {
+
+        let mut res = BigUint56::zero();
+        for i in 0..32 {
+            let limb_index = ((32 - 1 - i) as u56) / (BYTES_PER_LIMB as u56);
+            let byte_index = ((32 - 1 - i) as u56) % (BYTES_PER_LIMB as u56);
+
+            res.limbs[limb_index as Field] |= (bytes[i] as u56) << (byte_index * 8);
+        }
+
+        res
     }
 
     /// Constructs a BigUint56 from a byte array in little-endian format.

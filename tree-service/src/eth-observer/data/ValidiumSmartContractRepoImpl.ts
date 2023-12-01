@@ -16,7 +16,7 @@ export class ValidiumSmartContractRepoImpl implements ValidiumSmartContractRepo 
 
     async fetchRawTransactions(fromHeight: number, toHeight: number): Promise<RawTransaction[]> {
         const rawTransactions: RawTransaction[] = [];
-        console.log('fetching raw transactions', fromHeight.toString(), toHeight.toString());
+        // console.log('fetching raw transactions', fromHeight.toString(), toHeight.toString());
 
         for (let block = fromHeight; block <= toHeight; ++block) {
             const blockResp = await this.provider.getBlock(block);
@@ -49,6 +49,10 @@ export class ValidiumSmartContractRepoImpl implements ValidiumSmartContractRepo 
         }
 
         return rawTransactions;
+    }
+
+    async prove(): Promise<void> {
+
     }
 
 }
