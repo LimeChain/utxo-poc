@@ -13,7 +13,7 @@ anvil
 ```
 - deploy using:
 ```
-forge script script/Deploy.s.sol:Deploy --rpc-url $RPC_URL --broadcast -vvvv
+forge script script/Deploy.s.sol:Deploy --rpc-url http:127.0.0.1:8545 --broadcast -vvvv
 ```
 - send ETH from 3 accounts to the contract:
 ```
