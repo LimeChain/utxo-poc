@@ -1,4 +1,5 @@
 import injector from '../../core/utilities/injector/Injector';
+import NoirStore from '../../noir/presentation/state/NoirStore';
 import NullifierStore from '../../nullifier/presentation/state/NullifierStore';
 import ShellStore from '../../shell/presentation/state/ShellStore';
 import UtxoStore from '../../utxo/presentation/state/UtxoStore';
@@ -14,6 +15,7 @@ export default class EthObserver {
     utxoStore: UtxoStore;
     nullifierStore: NullifierStore;
     shellStore: ShellStore;
+    noirStore: NoirStore;
 
     constructor() {
         this.publicKeysStore = injector.getPublicKeysStore();
@@ -22,6 +24,7 @@ export default class EthObserver {
         this.utxoStore = injector.getUtxoStore();
         this.nullifierStore = injector.getNullifierStore();
         this.shellStore = injector.getShellStore();
+        this.noirStore = injector.getNoirStore();
     }
 
     async start() {
@@ -44,18 +47,27 @@ export default class EthObserver {
 
             console.log('    Processing tx:', rawTransaction.hash);
 
-            console.log('    Serializing data for proves...');
-            await this.utxoStore.generateUtxoSignatureProve(utxoTransaction);
-            await this.utxoStore.generateUtxoOwnershipProve(utxoTransaction);
-            await this.utxoStore.generateUtxoOutputsProve(utxoTransaction);
-            await this.utxoStore.generateUtxoInputsProve(utxoTransaction);
-            await this.nullifierStore.generateLowNullifierProve(utxoTransaction);
-            console.log(Array.from(this.utxoStore.utxoGraph.merkleTree.getRootHashAsUint8Array()));
-            console.log(Array.from(this.nullifierStore.nullifierTree.merkleTree.getRootHashAsUint8Array()));
+            // try {
+            //     console.log('    Serializing data for proves...');
+            //     await this.utxoStore.generateUtxoSignatureProve(utxoTransaction);
+            //     await this.utxoStore.generateUtxoOwnershipProve(utxoTransaction);
+            //     await this.utxoStore.generateUtxoOutputsProve(utxoTransaction);
+            //     await this.utxoStore.generateUtxoInputsProve(utxoTransaction);
+            //     await this.nullifierStore.generateLowNullifierProve(utxoTransaction);
+
+
+            //     console.log('    Executing circuits using cli...');
+            //     await this.shellStore.executeCircuits();
+            //     console.log('    Done...Ok');
+            // } catch (e) {
+            //     console.log('    Done...Error');
+            //     console.error(e);
+            //     process.exit(1);
+            // }
 
             try {
-                console.log('    Executing circuits...');
-                await this.shellStore.executeCircuits();
+                console.log('    Executing circuits using noir_js...');
+                await this.noirStore.executeCircuits(utxoTransaction);
                 console.log('    Done...Ok');
             } catch (e) {
                 console.log('    Done...Error');

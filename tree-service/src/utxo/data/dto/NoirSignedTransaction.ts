@@ -1,3 +1,5 @@
+//@ts-ignore
+import { InputMap } from '@noir-lang/noir_js';
 import UtxoTransaction from '../../entities/UtxoTransaction';
 import NoirTransaction from './NoirTransaction';
 
@@ -19,6 +21,18 @@ export default class NoirSignedTransaction {
         dto.transaction = NoirTransaction.fromUtxoNodes(utxoTransaction.inputs[0], utxoTransaction.outputs);
 
         return dto;
+    }
+
+    toJson(): InputMap {
+        return {
+            'signed_transaction': {
+                'pub_key_x': this.pub_key_x,
+                'pub_key_y': this.pub_key_y,
+                'signature': this.signature,
+                'tx_hash': this.tx_hash,
+                'transaction': this.transaction.toJson(),
+            }
+        }
     }
 
     toToml(path: string): string {

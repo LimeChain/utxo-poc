@@ -1,3 +1,5 @@
+//@ts-ignore
+import { InputMap } from '@noir-lang/noir_js';
 import NullifierNode from '../../entities/NullifierNode';
 
 export default class NoirNullifierNode {
@@ -14,6 +16,16 @@ export default class NoirNullifierNode {
         dto.val = Array.from(nullifierNode.getValueAsUint8Array());
 
         return dto;
+    }
+
+    toJson(): InputMap {
+        return {
+            'low_nullifier_leaf': [{
+                'nextIdx': this.nextIdx,
+                'nextVal': this.nextVal,
+                'val': this.val,
+            }]
+        } as unknown as InputMap;
     }
 
     toToml(path: string): string {

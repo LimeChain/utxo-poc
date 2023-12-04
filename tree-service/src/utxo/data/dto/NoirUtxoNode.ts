@@ -1,3 +1,5 @@
+//@ts-ignore
+import { InputMap } from '@noir-lang/noir_js';
 import UtxoNode from '../../entities/UtxoNode';
 
 export default class NoirUtxo {
@@ -18,6 +20,16 @@ export default class NoirUtxo {
         dto.nonce = utxoNode.getNonce();
 
         return dto;
+    }
+
+    toJson(): InputMap {
+        return {
+            'erc20_address': this.erc20_address,
+            'spender_pub_key_x': this.spender_pub_key_x,
+            'spender_pub_key_y': this.spender_pub_key_y,
+            'value': this.value,
+            'nonce': this.nonce,
+        }
     }
 
     toToml(path: string): string {

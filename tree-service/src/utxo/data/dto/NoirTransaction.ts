@@ -1,3 +1,5 @@
+//@ts-ignore
+import { InputMap } from '@noir-lang/noir_js';
 import UtxoNode from '../../entities/UtxoNode';
 import NoirUtxoNode from './NoirUtxoNode';
 
@@ -13,6 +15,13 @@ export default class NoirTransaction {
         dto.outputs = outputs.map((output) => NoirUtxoNode.fromUtxoNode(output));
 
         return dto;
+    }
+
+    toJson(): InputMap {
+        return {
+            'inputs': [this.inputs.toJson()],
+            'outputs': this.outputs.map((o) => o.toJson()),
+        } as unknown as InputMap
     }
 
     toToml(path: string): string {

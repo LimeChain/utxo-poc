@@ -14,6 +14,9 @@ import UtxoUseCases from '../../../utxo/use-cases/UtxoUseCases';
 import ShellRepoImpl from '../../../shell/data/repos/ShellRepoImpl';
 import ShellUseCases from '../../../shell/use-cases/ShellUseCases';
 import ShellStore from '../../../shell/presentation/state/ShellStore';
+import NoirStore from '../../../noir/presentation/state/NoirStore';
+import NoirUseCases from '../../../noir/use-cases/NoirUseCases';
+import NoirRepoImpl from '../../../noir/data/repos/NoirRepoImpl';
 
 class Injector {
 
@@ -23,6 +26,7 @@ class Injector {
     utxoStore: UtxoStore | null = null;
     nullifierStore: NullifierStore | null = null;
     shellStore: ShellStore | null = null;
+    noirStore: NoirStore | null = null;
 
     async init() {
         const ethObserverRepo = new EthObserverRepoImpl();
@@ -30,12 +34,14 @@ class Injector {
         const utxoNoirSerializerRepo = new UtxoNoirSerializerRepoImpl();
         const nullifierNoirSerializerRepo = new NullifierNoirSerializerRepoImpl();
         const shellRepo = new ShellRepoImpl();
+        const noirRepo = new NoirRepoImpl();
 
         const ethObserverUseCases = new EthObserverUseCases(ethObserverRepo);
         const validiumSmartContractUseCases = new ValidiumSmartContractUseCases(validiumSmartContractRepo);
         const utxoUseCases = new UtxoUseCases(utxoNoirSerializerRepo);
         const nullifierUseCases = new NullifierUseCases(nullifierNoirSerializerRepo)
         const shellUseCases = new ShellUseCases(shellRepo);
+        const noirUseCases = new NoirUseCases(noirRepo);
 
         this.publicKeysStore = new PublicKeysStore();
         this.ethObserverStore = new EthObserverStore(ethObserverUseCases);
@@ -43,6 +49,9 @@ class Injector {
         this.utxoStore = new UtxoStore(this.getPublicKeysStore(), utxoUseCases);
         this.nullifierStore = new NullifierStore(nullifierUseCases);
         this.shellStore = new ShellStore(shellUseCases);
+        this.noirStore = new NoirStore(this.getUtxoStore(), this.getNullifierStore(), noirUseCases);
+
+        await this.noirStore.init();
     }
 
     getPublicKeysStore(): PublicKeysStore {
@@ -67,6 +76,10 @@ class Injector {
 
     getShellStore(): ShellStore {
         return this.shellStore as ShellStore;
+    }
+
+    getNoirStore(): NoirStore {
+        return this.noirStore as NoirStore;
     }
 
 }

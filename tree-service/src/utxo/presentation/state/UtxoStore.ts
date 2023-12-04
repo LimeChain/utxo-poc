@@ -1,8 +1,12 @@
+import { BarretenbergBackend } from '@noir-lang/backend_barretenberg';
 import RawTransaction from '../../../eth-observer/entities/RawTransaction';
 import PublicKeysStore from '../../../eth-observer/presentation/state/PublicKeysStore';
 import UtxoGraph from '../../entities/UtxoGraph';
 import UtxoTransaction from '../../entities/UtxoTransaction';
 import UtxoUseCases from '../../use-cases/UtxoUseCases';
+//@ts-ignore
+import { Noir } from '@noir-lang/noir_js';
+import { Artifacts } from '../../../noir/entities/Artifacts';
 
 export default class UtxoStore {
 
@@ -49,6 +53,22 @@ export default class UtxoStore {
 
     async generateUtxoOutputsProve(utxoTransaction: UtxoTransaction): Promise<void> {
         await this.utxoUseCases.writeUtxoOutputs(this.utxoGraph.merkleTree, utxoTransaction);
+    }
+
+    generateUtxoSignatureArtifacts(utxoTransaction: UtxoTransaction, backend: BarretenbergBackend, noir: Noir): Promise<Artifacts> {
+        return this.utxoUseCases.generateUtxoSignatureArtifacts(utxoTransaction, backend, noir);
+    }
+
+    generateUtxoOwnershipArtifacts(utxoTransaction: UtxoTransaction, backend: BarretenbergBackend, noir: Noir): Promise<Artifacts> {
+        return this.utxoUseCases.generateUtxoOwnershipArtifacts(utxoTransaction, backend, noir);
+    }
+
+    generateUtxoInputsArtifacts(utxoTransaction: UtxoTransaction, backend: BarretenbergBackend, noir: Noir): Promise<Artifacts> {
+        return this.utxoUseCases.generateUtxoInputsArtifacts(this.utxoGraph.merkleTree, utxoTransaction, backend, noir);
+    }
+
+    generateUtxoOutputsArtifacts(utxoTransaction: UtxoTransaction, backend: BarretenbergBackend, noir: Noir): Promise<Artifacts> {
+        return this.utxoUseCases.generateUtxoOutputsArtifacts(this.utxoGraph.merkleTree, utxoTransaction, backend, noir);
     }
 
 

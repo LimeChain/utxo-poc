@@ -7,6 +7,11 @@ import NoirSignedTransaction from '../dto/NoirSignedTransaction';
 import MerkleTree from '../../../merkle-tree/entities/MerkleTree';
 import MerkleTreeNode from '../../../merkle-tree/entities/MerkleTreeNode';
 import NoirMerkleTreePath from '../../../merkle-tree/data/dto/NoirMerkleTreePath';
+import NoirArtifacts from '../../../noir/utilities/NoirArtifacts';
+import { BarretenbergBackend } from '@noir-lang/backend_barretenberg';
+//@ts-ignore
+import { InputMap, Noir } from '@noir-lang/noir_js';
+import { Artifacts } from '../../../noir/entities/Artifacts';
 
 export default class UtxoNoirSerializerRepoImpl implements UtxoNoirSerializerRepo {
 
@@ -90,6 +95,30 @@ export default class UtxoNoirSerializerRepoImpl implements UtxoNoirSerializerRep
                 resolve();
             });
         });
+    }
+
+    async generateUtxoSignatureArtifacts(utxoTransaction: UtxoTransaction, backend: BarretenbergBackend, noir: Noir): Promise<Artifacts> {
+        const noirSignedTransaction = NoirSignedTransaction.fromUtxoTransaction(utxoTransaction);
+        return NoirArtifacts.generateArtifacts(backend, noir, noirSignedTransaction.toJson(), 0);
+    }
+
+    async generateUtxoOwnershipArtifacts(utxoTransaction: UtxoTransaction, backend: BarretenbergBackend, noir: Noir): Promise<Artifacts> {
+        const noirSignedTransaction = NoirSignedTransaction.fromUtxoTransaction(utxoTransaction);
+        return NoirArtifacts.generateArtifacts(backend, noir, noirSignedTransaction.toJson(), 0);
+    }
+
+    async generateUtxoInputsArtifacts(merkleTree: MerkleTree<MerkleTreeNode>, utxoTransaction: UtxoTransaction, backend: BarretenbergBackend, noir: Noir): Promise<Artifacts> {
+        const noirSignedTransaction = NoirSignedTransaction.fromUtxoTransaction(utxoTransaction);
+        const noirMerkleTreePath = NoirMerkleTreePath.fromMerkleTreeData(merkleTree, utxoTransaction.inputs);
+        const params: InputMap = Object.assign({}, noirMerkleTreePath.toJson(), noirSignedTransaction.toJson());
+        return NoirArtifacts.generateArtifacts(backend, noir, params, 0);
+    }
+
+    async generateUtxoOutputsArtifacts(merkleTree: MerkleTree<MerkleTreeNode>, utxoTransaction: UtxoTransaction, backend: BarretenbergBackend, noir: Noir): Promise<Artifacts> {
+        const noirSignedTransaction = NoirSignedTransaction.fromUtxoTransaction(utxoTransaction);
+        const noirMerkleTreePath = NoirMerkleTreePath.fromMerkleTreeData(merkleTree, utxoTransaction.outputs);
+        const params: InputMap = Object.assign({}, noirMerkleTreePath.toJson(), noirSignedTransaction.toJson());
+        return NoirArtifacts.generateArtifacts(backend, noir, params, 1);
     }
 
 }

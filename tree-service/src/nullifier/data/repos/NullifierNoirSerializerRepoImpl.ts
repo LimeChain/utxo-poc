@@ -9,6 +9,11 @@ import NoirNullifierNode from '../dto/NoirNullifierNode';
 import NoirMerkleTreePath from '../../../merkle-tree/data/dto/NoirMerkleTreePath';
 import MerkleTree from '../../../merkle-tree/entities/MerkleTree';
 import MerkleTreeNode from '../../../merkle-tree/entities/MerkleTreeNode';
+import { BarretenbergBackend } from '@noir-lang/backend_barretenberg';
+//@ts-ignore
+import { InputMap, Noir } from '@noir-lang/noir_js';
+import { Artifacts } from '../../../noir/entities/Artifacts';
+import NoirArtifacts from '../../../noir/utilities/NoirArtifacts';
 
 export default class NullifierNoirSerializerRepoImpl implements NullifierNoirSerializerRepo {
 
@@ -37,6 +42,14 @@ export default class NullifierNoirSerializerRepoImpl implements NullifierNoirSer
                 resolve();
             });
         });
+    }
+
+    async generateLowNullifierArtifacts(merkleTree: MerkleTree<MerkleTreeNode>, lowNullifierNode: NullifierNode, utxoTransaction: UtxoTransaction, backend: BarretenbergBackend, noir: Noir): Promise<Artifacts> {
+        const noirSignedTransaction = NoirSignedTransaction.fromUtxoTransaction(utxoTransaction);
+        const noirMerkleTreePath = NoirMerkleTreePath.fromMerkleTreeData(merkleTree, [lowNullifierNode]);
+        const noirNullifierNode = NoirNullifierNode.fromNullifierNode(lowNullifierNode);
+        const params: InputMap = Object.assign({}, noirMerkleTreePath.toJson(), noirNullifierNode.toJson(), noirSignedTransaction.toJson());
+        return NoirArtifacts.generateArtifacts(backend, noir, params, 1);
     }
 
 }

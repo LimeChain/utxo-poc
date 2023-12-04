@@ -1,3 +1,5 @@
+//@ts-ignore
+import { InputMap } from '@noir-lang/noir_js';
 import MerkleTree from '../../../merkle-tree/entities/MerkleTree';
 import MerkleTreeNode from '../../../merkle-tree/entities/MerkleTreeNode';
 
@@ -17,6 +19,14 @@ export default class MerkleTreePath {
         });
 
         return merkleTreePath;
+    }
+
+    toJson(): InputMap {
+        return {
+            'root': this.utxo_before_root,
+            'are_nodes_right': this.utxo_before_path_indices,
+            'siblings': this.utxo_before_siblings,
+        } as unknown as InputMap
     }
 
     toToml(): string {
