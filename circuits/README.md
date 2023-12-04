@@ -25,5 +25,5 @@ The resulting proof is stored in proofs/utxo_poc.proof file. The verifier expect
 - Generate aggregator Prover.toml
 ```
 chmod +x aggregate.sh
-./aggregate.sh <low_nullifier_root> <utxo_root>
+./aggregate.sh
 ```

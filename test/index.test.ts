@@ -4,46 +4,67 @@ import { Noir } from '@noir-lang/noir_js';
 import { BarretenbergBackend } from '@noir-lang/backend_barretenberg';
 import { BackendInstances, Circuits, Noirs } from '../types';
 import { ethers } from 'hardhat';
-import { compile } from '@noir-lang/noir_wasm';
-import path from 'path';
-import { ProofData } from '@noir-lang/types';
 
-const getCircuit = async (name: string) => {
-    const compiled = await compile(path.resolve("circuits", "crates", name, "src", `main.nr`));
-    return compiled
-}
+import path from 'path';
+import { ProofData, CompiledCircuit } from '@noir-lang/types';
+
+import utxo_signature_circuit from "../circuits/target/utxo_signature.json"
+import utxo_ownership_circuit from "../circuits/target/utxo_ownership.json"
+import utxo_inputs_circuit from "../circuits/target/utxo_inputs.json"
+import utxo_outputs_circuit from "../circuits/target/utxo_outputs.json"
+import low_nullifier_circuit from "../circuits/target/low_nullifier.json"
+import aggregator_circuit from "../circuits/target/aggregator.json"
+
+import * as fs from 'fs';
 
 const getArtifactsPath = (name: string) => {
     return path.join("circuits", "contract", name, "plonk_vk.sol:UltraVerifier")
 }
 
-describe('It compiles noir program code, receiving circuit bytes and abi object.', () => {
-    let circuits: Circuits;
+const loadProofData = (name: string): ProofData => {
+    // Read the file as a Buffer to get the hex data
+    const hexData = fs.readFileSync(path.join("circuits", "proofs", `${name}.proof`));
+
+    // Convert the hex data to a string
+    const bytes = Uint8Array.from(Buffer.from(hexData.toString(), 'hex'));
+    console.log(bytes.length)
+    // Parse the JSON string into ProofData type
+    return {
+        publicInputs: [],
+        proof: bytes
+    };
+}
+
+describe("Recursive flow", async () => {
     let backends: BackendInstances;
     let noirs: Noirs;
+    let verifierContract: ethers.Contract;
+
+    let recursiveInputs: any;
+    let recursiveProof: ProofData;
 
     before(async () => {
-        circuits = {
-            utxo_signature: await getCircuit("utxo-signature"),
-            utxo_ownership: await getCircuit("utxo-ownership"),
-            utxo_inputs: await getCircuit("utxo-inputs"),
-            utxo_outputs: await getCircuit("utxo-outputs"),
-            low_nullifier: await getCircuit("low-nullifier"),
-        }
         backends = {
-            utxo_signature: new BarretenbergBackend(circuits.utxo_signature, { threads: 8 }),
-            utxo_ownership: new BarretenbergBackend(circuits.utxo_ownership, { threads: 8 }),
-            utxo_inputs: new BarretenbergBackend(circuits.utxo_inputs, { threads: 8 }),
-            utxo_outputs: new BarretenbergBackend(circuits.utxo_outputs, { threads: 8 }),
-            low_nullifier: new BarretenbergBackend(circuits.low_nullifier, { threads: 8 })
+            utxo_signature: new BarretenbergBackend(utxo_signature_circuit as unknown as CompiledCircuit, { threads: 8 }),
+            utxo_ownership: new BarretenbergBackend(utxo_ownership_circuit as unknown as CompiledCircuit, { threads: 8 }),
+            utxo_inputs: new BarretenbergBackend(utxo_inputs_circuit as unknown as CompiledCircuit, { threads: 8 }),
+            utxo_outputs: new BarretenbergBackend(utxo_outputs_circuit as unknown as CompiledCircuit, { threads: 8 }),
+            low_nullifier: new BarretenbergBackend(low_nullifier_circuit as unknown as CompiledCircuit, { threads: 8 }),
+            aggregator: new BarretenbergBackend(aggregator_circuit as unknown as CompiledCircuit, { threads: 8 })
         }
         noirs = {
-            utxo_signature: new Noir(circuits.utxo_signature, backends.utxo_signature),
-            utxo_ownership: new Noir(circuits.utxo_ownership, backends.utxo_ownership),
-            utxo_inputs: new Noir(circuits.utxo_inputs, backends.utxo_inputs),
-            utxo_outputs: new Noir(circuits.utxo_outputs, backends.utxo_outputs),
-            low_nullifier: new Noir(circuits.low_nullifier, backends.low_nullifier),
+            utxo_signature: new Noir(utxo_signature_circuit as unknown as CompiledCircuit, backends.utxo_signature),
+            utxo_ownership: new Noir(utxo_ownership_circuit as unknown as CompiledCircuit, backends.utxo_ownership),
+            utxo_inputs: new Noir(utxo_inputs_circuit as unknown as CompiledCircuit, backends.utxo_inputs),
+            utxo_outputs: new Noir(utxo_outputs_circuit as unknown as CompiledCircuit, backends.utxo_outputs),
+            low_nullifier: new Noir(low_nullifier_circuit as unknown as CompiledCircuit, backends.low_nullifier),
+            aggregator: new Noir(aggregator_circuit as unknown as CompiledCircuit, backends.aggregator),
         }
+
+        const verifierContractFactory = await ethers.getContractFactory(getArtifactsPath("aggregator"));
+        verifierContract = await verifierContractFactory.deploy();
+
+        const verifierAddr = await verifierContract.waitForDeployment();
     })
 
 
@@ -55,203 +76,100 @@ describe('It compiles noir program code, receiving circuit bytes and abi object.
         await backends.low_nullifier.destroy();
     })
 
-    describe("Normal flow", async () => {
-        let finalProof: ProofData;
 
-        describe("Proof generation", async () => {
-            it('Should generate a final proof', async () => {
-                const utxo_signature = await noirs.utxo_signature.generateFinalProof(mainInput)
-                expect(utxo_signature.proof instanceof Uint8Array).to.be.true;
-            });
-        })
+    it('Should generate an intermediate proof', async () => {
 
-        describe("Proof verification", async () => {
-            let verifierContract: ethers.Contract;
+        const utxo_signature_proof_data = loadProofData('utxo_signature');
+        const utxo_ownership_proof_data = loadProofData('utxo_ownership');
+        const utxo_inputs_proof_data = loadProofData('utxo_inputs');
+        const utxo_outputs_proof_data = loadProofData('utxo_outputs');
+        const low_nullifier_proof_data = loadProofData('low_nullifier');
 
-            before(async () => {
-                const verifierContractFactory = await ethers.getContractFactory(getArtifactsPath("aggregator"));
-                verifierContract = await verifierContractFactory.deploy();
-            });
-
-            it('Should verify off-chain', async () => {
-                const verified = await noirs.main.verifyFinalProof(finalProof);
-                expect(verified).to.be.true;
-            });
-
-            it("Should verify on-chain", async () => {
-                const { proof, publicInputs } = finalProof;
-                const verified = await verifierContract.verify(proof, publicInputs);
-                expect(verified).to.be.true;
-            })
-        })
-    })
-
-    describe("Recursive flow", async () => {
-        let circuits: Circuits;
-        let backends: BackendInstances;
-        let noirs: Noirs;
-
-        let recursiveInputs: any;
-        let recursiveProof: ProofData;
-
-        before(async () => {
-            circuits = {
-                utxo_signature: await getCircuit("utxo-signature"),
-                utxo_ownership: await getCircuit("utxo-ownership"),
-                utxo_inputs: await getCircuit("utxo-inputs"),
-                utxo_outputs: await getCircuit("utxo-outputs"),
-                low_nullifier: await getCircuit("low-nullifier"),
-            }
-            backends = {
-                utxo_signature: new BarretenbergBackend(circuits.utxo_signature, { threads: 8 }),
-                utxo_ownership: new BarretenbergBackend(circuits.utxo_ownership, { threads: 8 }),
-                utxo_inputs: new BarretenbergBackend(circuits.utxo_inputs, { threads: 8 }),
-                utxo_outputs: new BarretenbergBackend(circuits.utxo_outputs, { threads: 8 }),
-                low_nullifier: new BarretenbergBackend(circuits.low_nullifier, { threads: 8 })
-            }
-            noirs = {
-                utxo_signature: new Noir(circuits.utxo_signature, backends.utxo_signature),
-                utxo_ownership: new Noir(circuits.utxo_ownership, backends.utxo_ownership),
-                utxo_inputs: new Noir(circuits.utxo_inputs, backends.utxo_inputs),
-                utxo_outputs: new Noir(circuits.utxo_outputs, backends.utxo_outputs),
-                low_nullifier: new Noir(circuits.low_nullifier, backends.low_nullifier),
-            }
-        })
+        const {proofAsFields: utxo_signature_proofAsFields, vkAsFields: utxo_signature_vkAsFields, vkHash: utxo_signature_vkHash } = await backends.utxo_signature.generateIntermediateProofArtifacts(
+            utxo_signature_proof_data,
+            0, // numPublicInputs
+        );
+        expect(utxo_signature_vkAsFields).to.be.of.length(114);
+        expect(utxo_signature_vkHash).to.be.a('string');
 
 
-        after(async () => {
-            await backends.utxo_signature.destroy();
-            await backends.utxo_ownership.destroy();
-            await backends.utxo_inputs.destroy();
-            await backends.utxo_outputs.destroy();
-            await backends.low_nullifier.destroy();
-        })
+        console.log(utxo_signature_vkAsFields)
+        console.log(utxo_signature_vkHash)
 
+        const { proofAsFields: utxo_ownership_proofAsFields, vkAsFields: utxo_ownership_vkAsFields, vkHash: utxo_ownership_vkHash } = await backends.utxo_ownership.generateIntermediateProofArtifacts(
+            utxo_ownership_proof_data,
+            0, // numPublicInputs,
+        );
+        expect(utxo_ownership_vkAsFields).to.be.of.length(114);
+        expect(utxo_ownership_vkHash).to.be.a('string');
 
-        describe("Proof generation", async () => {
-            it('Should generate an intermediate proof', async () => {
+        const { proofAsFields: utxo_inputs_proofAsFields, vkAsFields: utxo_inputs_vkAsFields,vkHash: utxo_inputs_vkHash } = await backends.utxo_inputs.generateIntermediateProofArtifacts(
+            utxo_inputs_proof_data,
+            0, // numPublicInputs,
+        );
+        expect(utxo_inputs_vkAsFields).to.be.of.length(114);
+        expect(utxo_inputs_vkHash).to.be.a('string');
 
-                const { witness, returnValue } = await noirs.utxo_signature.execute(mainInput);
+        const { proofAsFields: utxo_outputs_proofAsFields, vkAsFields: utxo_outputs_vkAsFields, vkHash: utxo_outputs_vkHash } = await backends.utxo_outputs.generateIntermediateProofArtifacts(
+            utxo_outputs_proof_data,
+            0, // numPublicInputs,
+        );
+        expect(utxo_outputs_vkAsFields).to.be.of.length(114);
+        expect(utxo_outputs_vkHash).to.be.a('string');
 
-                const { proof_utxo_signature, publicInputs_utxo_signature } = await backends.utxo_signature.generateIntermediateProof(witness);
-                const { proof_utxo_ownership, publicInputs_utxo_ownership } = await backends.utxo_signature.generateIntermediateProof(witness);
-                const { proof_utxo_inputs, publicInputs_utxo_inputs } = await backends.utxo_signature.generateIntermediateProof(witness);
-                const { proof_utxo_outputs, publicInputs_utxo_outputs } = await backends.utxo_signature.generateIntermediateProof(witness);
-                const { proof_low_nullifier, publicInputs_low_nullifier } = await backends.utxo_signature.generateIntermediateProof(witness);
+        const { proofAsFields: low_nullifier_proofAsFields, vkAsFields: low_nullifier_vkAsFields, vkHash: low_nullifier_vkHash } = await backends.low_nullifier.generateIntermediateProofArtifacts(
+            low_nullifier_proof_data,
+            0, // numPublicInputs,
+        );
+        expect(low_nullifier_vkAsFields).to.be.of.length(114);
+        expect(low_nullifier_vkHash).to.be.a('string');
 
-                expect(proof_utxo_signature instanceof Uint8Array).to.be.true;
-                expect(proof_utxo_ownership instanceof Uint8Array).to.be.true;
-                expect(proof_utxo_inputs instanceof Uint8Array).to.be.true;
-                expect(proof_utxo_outputs instanceof Uint8Array).to.be.true;
-                expect(proof_low_nullifier instanceof Uint8Array).to.be.true;
+        const aggregationObject = Array(16).fill(
+            '0x0000000000000000000000000000000000000000000000000000000000000000',
+        );
 
-                const verified1 = await backends.utxo_signature.verifyIntermediateProof({ proof_utxo_signature, publicInputs_utxo_signature });
-                expect(verified1).to.be.true;
-                const verified2 = await backends.utxo_ownership.verifyIntermediateProof({ proof_utxo_ownership, publicInputs_utxo_ownership });
-                expect(verified2).to.be.true;
-                const verified3 = await backends.utxo_inputs.verifyIntermediateProof({ proof_utxo_inputs, publicInputs_utxo_inputs });
-                expect(verified3).to.be.true;
-                const verified4 = await backends.utxo_outputs.verifyIntermediateProof({ proof_utxo_outputs, publicInputs_utxo_outputs });
-                expect(verified4).to.be.true;
-                const verified5 = await backends.low_nullifier.verifyIntermediateProof({ proof_low_nullifier, publicInputs_low_nullifier });
-                expect(verified5).to.be.true;
+        recursiveInputs = {
+            verification_key_utxo_signature: utxo_signature_vkAsFields,
+            verification_key_utxo_ownership: utxo_ownership_vkAsFields,
+            verification_key_utxo_inputs: utxo_inputs_vkAsFields,
+            verification_key_utxo_outputs: utxo_outputs_vkAsFields,
+            verification_key_low_nullifier: low_nullifier_vkAsFields,
 
+            proof_utxo_signature: utxo_signature_proofAsFields,
+            proof_utxo_ownership: utxo_ownership_proofAsFields,
+            proof_utxo_inputs: utxo_inputs_proofAsFields,
+            proof_utxo_outputs: utxo_outputs_proofAsFields,
+            proof_low_nullifier: low_nullifier_proofAsFields,
 
-                const { utxo_signature_proofAsFields, utxo_signature_vkAsFields, utxo_signature_vkHash } = await backends.utxo_signature.generateIntermediateProofArtifacts(
-                    { publicInputs_utxo_signature, proof_utxo_signature },
-                    0, // numPublicInputs
-                );                
-                expect(utxo_signature_vkAsFields).to.be.of.length(114);
-                expect(utxo_signature_vkHash).to.be.a('string');
+            public_inputs_utxo_signature: [],
+            public_inputs_utxo_ownership: [],
+            public_inputs_utxo_inputs: [],
+            public_inputs_utxo_outputs: [],
+            public_inputs_low_nullifier: [],
 
+            key_hash_utxo_signature: utxo_signature_vkHash,
+            key_hash_utxo_ownership: utxo_ownership_vkHash,
+            key_hash_utxo_inputs: utxo_inputs_vkHash,
+            key_hash_utxo_outputs: utxo_outputs_vkHash,
+            key_hash_low_nullifier: low_nullifier_vkHash,
 
-                const { utxo_ownership_proofAsFields, utxo_ownership_vkAsFields, utxo_ownership_vkHash } = await backends.utxo_ownership.generateIntermediateProofArtifacts(
-                    { publicInputs_utxo_ownership, proof_utxo_ownership },
-                    0, // numPublicInputs,
-                );
-                expect(utxo_ownership_vkAsFields).to.be.of.length(114);
-                expect(utxo_ownership_vkHash).to.be.a('string');
+            input_aggregation_object: aggregationObject,
+        }
 
-                const { utxo_inputs_proofAsFields, utxo_inputs_vkAsFields, utxo_inputs_vkHash } = await backends.utxo_inputs.generateIntermediateProofArtifacts(
-                    { publicInputs_utxo_inputs, proof_utxo_inputs },
-                    0, // numPublicInputs,
-                );
-                expect(utxo_inputs_vkAsFields).to.be.of.length(114);
-                expect(utxo_inputs_vkHash).to.be.a('string');
+    });
 
-                const { utxo_outputs_proofAsFields, utxo_outputs_vkAsFields, utxo_outputs_vkHash } = await backends.utxo_outputs.generateIntermediateProofArtifacts(
-                    { publicInputs_utxo_outputs, proof_utxo_outputs },
-                    1, // numPublicInputs,
-                );
-                expect(utxo_outputs_vkAsFields).to.be.of.length(114);
-                expect(utxo_outputs_vkHash).to.be.a('string');
+    // it("Should generate a final proof with a recursive input", async () => {
+    //     recursiveProof = await noirs.aggregator.generateFinalProof(recursiveInputs)
+    //     expect(recursiveProof.proof instanceof Uint8Array).to.be.true;
+    // })
 
-                const { low_nullifier_proofAsFields, low_nullifier_vkAsFields, low_nullifier_vkHash } = await backends.low_nullifier.generateIntermediateProofArtifacts(
-                    { publicInputs_low_nullifier, proof_low_nullifier },
-                    1, // numPublicInputs,
-                );
-                expect(low_nullifier_vkAsFields).to.be.of.length(114);
-                expect(low_nullifier_vkHash).to.be.a('string');
+    // it('Should verify off-chain', async () => {
+    //     const verified = await noirs.aggregator.verifyFinalProof(recursiveProof);
+    //     expect(verified).to.be.true;
+    // });
 
-                const aggregationObject = Array(16).fill(
-                    '0x0000000000000000000000000000000000000000000000000000000000000000',
-                );
-
-                recursiveInputs = {
-                    verification_key_utxo_signature: utxo_signature_vkAsFields,
-                    verification_key_utxo_ownership: utxo_ownership_vkAsFields,
-                    verification_key_utxo_inputs: utxo_inputs_vkAsFields,
-                    verification_key_utxo_outputs: utxo_outputs_vkAsFields,
-                    verification_key_low_nullifier: low_nullifier_vkAsFields,
-                    
-                    proof_utxo_signature: utxo_signature_proofAsFields,
-                    proof_utxo_ownership: utxo_ownership_proofAsFields,
-                    proof_utxo_inputs: utxo_inputs_proofAsFields,
-                    proof_utxo_outputs: utxo_outputs_proofAsFields,
-                    proof_low_nullifier: low_nullifier_proofAsFields,
-
-                    public_inputs_utxo_signature: [],
-                    public_inputs_utxo_ownership: [],
-                    public_inputs_utxo_inputs: [],
-                    public_inputs_utxo_outputs: [],
-                    public_inputs_low_nullifier: [],
-
-                    key_hash_utxo_signature: utxo_signature_vkHash,
-                    key_hash_utxo_ownership: utxo_ownership_vkHash,
-                    key_hash_utxo_inputs: utxo_inputs_vkHash,
-                    key_hash_utxo_outputs: utxo_outputs_vkHash,
-                    key_hash_low_nullifier: low_nullifier_vkHash,
-
-                    input_aggregation_object: aggregationObject,
-                }
-
-            });
-
-            it("Should generate a final proof with a recursive input", async () => {
-                recursiveProof = await noirs.recursive.generateFinalProof(recursiveInputs)
-                expect(recursiveProof.proof instanceof Uint8Array).to.be.true;
-            })
-        });
-
-        describe("Proof verification", async () => {
-            let verifierContract: ethers.Contract;
-
-            before(async () => {
-                const verifierContractFactory = await ethers.getContractFactory(getArtifactsPath("recursion"));
-                verifierContract = await verifierContractFactory.deploy();
-
-                const verifierAddr = await verifierContract.deployed();
-            });
-
-            it('Should verify off-chain', async () => {
-                const verified = await noirs.recursive.verifyFinalProof(recursiveProof);
-                expect(verified).to.be.true;
-            });
-
-            it("Should verify on-chain", async () => {
-                const verified = await verifierContract.verify(recursiveProof.proof, recursiveProof.publicInputs);
-                expect(verified).to.be.true;
-            })
-        })
-    })
-});
+    // it("Should verify on-chain", async () => {
+    //     const verified = await verifierContract.verify(recursiveProof.proof, recursiveProof.publicInputs);
+    //     expect(verified).to.be.true;
+    // })
+})

@@ -18,6 +18,7 @@ export type BackendInstances = {
     utxo_inputs: BarretenbergBackend
     utxo_outputs: BarretenbergBackend
     low_nullifier: BarretenbergBackend
+    aggregator: BarretenbergBackend
 }
 
 export type Noirs = {
@@ -26,6 +27,7 @@ export type Noirs = {
     utxo_inputs: Noir
     utxo_outputs: Noir
     low_nullifier: Noir
+    aggregator: Noir
 }
 
 export interface ProofArtifacts extends ProofData {
