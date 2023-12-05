@@ -103,12 +103,18 @@ describe("Recursive flow", async () => {
         expect(utxo_ownership_vkAsFields).to.be.of.length(114);
         expect(utxo_ownership_vkHash).to.be.a('string');
 
+        console.log(utxo_ownership_vkAsFields)
+        console.log(utxo_ownership_vkHash)
+
         const { proofAsFields: utxo_inputs_proofAsFields, vkAsFields: utxo_inputs_vkAsFields,vkHash: utxo_inputs_vkHash } = await backends.utxo_inputs.generateIntermediateProofArtifacts(
             utxo_inputs_proof_data,
             0, // numPublicInputs,
         );
         expect(utxo_inputs_vkAsFields).to.be.of.length(114);
         expect(utxo_inputs_vkHash).to.be.a('string');
+
+        console.log(utxo_inputs_vkAsFields)
+        console.log(utxo_inputs_vkHash)
 
         const { proofAsFields: utxo_outputs_proofAsFields, vkAsFields: utxo_outputs_vkAsFields, vkHash: utxo_outputs_vkHash } = await backends.utxo_outputs.generateIntermediateProofArtifacts(
             utxo_outputs_proof_data,
@@ -117,12 +123,18 @@ describe("Recursive flow", async () => {
         expect(utxo_outputs_vkAsFields).to.be.of.length(114);
         expect(utxo_outputs_vkHash).to.be.a('string');
 
+        console.log(utxo_outputs_vkAsFields)
+        console.log(utxo_outputs_vkHash)
+
         const { proofAsFields: low_nullifier_proofAsFields, vkAsFields: low_nullifier_vkAsFields, vkHash: low_nullifier_vkHash } = await backends.low_nullifier.generateIntermediateProofArtifacts(
             low_nullifier_proof_data,
             0, // numPublicInputs,
         );
         expect(low_nullifier_vkAsFields).to.be.of.length(114);
         expect(low_nullifier_vkHash).to.be.a('string');
+
+        console.log(low_nullifier_vkAsFields)
+        console.log(low_nullifier_vkHash)
 
         const aggregationObject = Array(16).fill(
             '0x0000000000000000000000000000000000000000000000000000000000000000',
