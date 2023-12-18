@@ -1,5 +1,0 @@
-[package]
-name = "aggregator"
-type = "bin"
-authors = [""]
-compiler_version = ">=0.18"

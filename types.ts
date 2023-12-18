@@ -5,6 +5,7 @@ import { CompiledCircuit, ProofData } from "@noir-lang/types"
 
 
 export type Circuits = {
+  dkim: CompiledCircuit,
   utxo_signature: CompiledCircuit,
   utxo_ownership: CompiledCircuit
   utxo_inputs: CompiledCircuit
@@ -13,6 +14,7 @@ export type Circuits = {
 }
 
 export type BackendInstances = {
+    dkim: BarretenbergBackend,
     utxo_signature: BarretenbergBackend,
     utxo_ownership: BarretenbergBackend
     utxo_inputs: BarretenbergBackend
@@ -22,6 +24,7 @@ export type BackendInstances = {
 }
 
 export type Noirs = {
+    dkim: Noir,
     utxo_signature: Noir,
     utxo_ownership: Noir
     utxo_inputs: Noir

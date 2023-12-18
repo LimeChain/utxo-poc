@@ -46,16 +46,17 @@ contract L1Exiter is Ownable, ReentrancyGuard {
     event Deposit(address user, address token, uint256 value);
 
     constructor(address _verifier, uint256 _challengePeriod) Ownable(msg.sender) {
-        require(_verifier != address(0));
+        require(_verifier != address(0), "address zero");
         verifier = IVerifier(verifier);
         challengePeriod = _challengePeriod;
     }
 
     //NOTE: we optimistically trust that the account-based model state roots are correct.
     //submits proof that
-    function submitProof(bytes calldata _proof, bytes32 _utxoRoot, bytes32 _nullifierRoot, bytes32[] memory publicInputs) external onlyOwner {
+    function submitProof(bytes calldata _proof, bytes32 _utxoRoot, bytes32 _nullifierRoot, bytes32[] calldata publicInputs) external onlyOwner {
 
-        require(verifier.verify(_proof, publicInputs), "invalid proof");
+        bool success = verifier.verify(_proof, publicInputs);
+        require(success, "invalid proof");
 
         nullifierRoot = _nullifierRoot;
         utxoRoot = _utxoRoot;
