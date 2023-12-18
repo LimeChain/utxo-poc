@@ -8,11 +8,11 @@
     "compile": "cd circuits && nargo compile --package utxo_signature && nargo compile --package utxo_ownership && nargo compile --package utxo_inputs && nargo compile --package utxo_outputs && nargo compile --package low_nullifier && nargo compile --package aggregator && nargo codegen-verifier"
   },
   "dependencies": {
-    "@noir-lang/backend_barretenberg": "0.19.3+4e3a5a980b6739e9804e34d96f48d6bbcb31757f",
-    "@noir-lang/noir_js": "0.19.3+4e3a5a980b6739e9804e34d96f48d6bbcb31757f",
-    "@noir-lang/noir_wasm": "0.19.3+4e3a5a980b6739e9804e34d96f48d6bbcb31757f",
-    "@noir-lang/source-resolver": "0.19.3+4e3a5a980b6739e9804e34d96f48d6bbcb31757f",
-    "@noir-lang/types": "0.19.3+4e3a5a980b6739e9804e34d96f48d6bbcb31757f",
+    "@noir-lang/backend_barretenberg": "0.19.4",
+    "@noir-lang/noir_js": "0.19.4",
+    "@noir-lang/noir_wasm": "0.19.4",
+    "@noir-lang/source-resolver": "0.19.4",
+    "@noir-lang/types": "0.19.4",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
     "@typechain/ethers-v6": "^0.4.0",
