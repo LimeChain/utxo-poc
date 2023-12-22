@@ -14,6 +14,7 @@ import { BarretenbergBackend } from '@noir-lang/backend_barretenberg';
 import { InputMap, Noir } from '@noir-lang/noir_js';
 import { Artifacts } from '../../../noir/entities/Artifacts';
 import NoirArtifacts from '../../../noir/utilities/NoirArtifacts';
+import { NAME_LOW_NULLIFIER } from '../../entities/NullifierCircuits';
 
 export default class NullifierNoirSerializerRepoImpl implements NullifierNoirSerializerRepo {
 
@@ -23,7 +24,7 @@ export default class NullifierNoirSerializerRepoImpl implements NullifierNoirSer
         const noirNullifierNode = NoirNullifierNode.fromNullifierNode(lowNullifierNode);
 
         return new Promise((resolve, reject) => {
-            const storagePath = Path.join(__dirname, '../../../../../circuits/crates/low-nullifier/Prover.toml');
+            const storagePath = Path.join(__dirname, '../../../../../foundry/circuits/crates/low-nullifier/Prover.toml');
 
             const buffer = [
                 noirMerkleTreePath.toToml(),
@@ -49,7 +50,7 @@ export default class NullifierNoirSerializerRepoImpl implements NullifierNoirSer
         const noirMerkleTreePath = NoirMerkleTreePath.fromMerkleTreeData(merkleTree, [lowNullifierNode]);
         const noirNullifierNode = NoirNullifierNode.fromNullifierNode(lowNullifierNode);
         const params: InputMap = Object.assign({}, noirMerkleTreePath.toJson(), noirNullifierNode.toJson(), noirSignedTransaction.toJson());
-        return NoirArtifacts.generateArtifacts(backend, noir, params, 1);
+        return NoirArtifacts.generateArtifacts(backend, noir, params, NAME_LOW_NULLIFIER);
     }
 
 }

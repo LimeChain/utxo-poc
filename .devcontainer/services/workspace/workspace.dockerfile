@@ -1,4 +1,4 @@
-FROM node:21.2.0-bookworm
+FROM rust:1.74.1-bookworm
 
 # configure users
 ARG MNT_PATH
@@ -9,8 +9,8 @@ ARG GROUP_ID
 ARG GROUP_NAME
 
 RUN if [ $USER_NAME != 'root' ]; then \
-    groupmod -g 2000 node; \
-    usermod -u 2000 -g 2000 node; \
+    # groupmod -g 2000 node; \
+    # usermod -u 2000 -g 2000 node; \
     addgroup -gid $GROUP_ID $GROUP_NAME; \
     adduser --disabled-password -gecos "" -uid $USER_ID -gid $GROUP_ID $USER_NAME; \
     fi && \
@@ -20,6 +20,12 @@ RUN if [ $USER_NAME != 'root' ]; then \
 
 # install sudo
 RUN apt-get update && apt-get -y install sudo git libc++-dev
+
+# install node
+RUN apt-get -y install ca-certificates curl gnupg && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_21.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
+    apt-get update && apt-get -y install nodejs npm
 
 # install nargo
 RUN cd /tmp && \

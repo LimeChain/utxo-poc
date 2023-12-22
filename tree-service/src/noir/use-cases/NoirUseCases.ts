@@ -21,7 +21,7 @@ export default class NoirUseCases {
     }
 
     async getCircuit(name: string): Promise<CompiledProgram> {
-        const circuitsPath = Path.resolve('../circuits');
+        const circuitsPath = Path.resolve('../foundry/circuits');
         const content = FS.readFileSync(Path.join(circuitsPath, 'target', name + '.json')).toString();
         return JSON.parse(content) as CompiledProgram;
     }
